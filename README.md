@@ -8,8 +8,7 @@ The general approach of enabling drones to perform altitude estimation in indoor
 3): Port that neural network over to the MCU we have onboard (STM32). Note that this step can be done in multiple ways, TFLite/Cube.AI/CMSIS-NN, etc.
 
 
-## Usage
-### Installation
+## Installation
 
 Clone the repo and change directory:
 
@@ -24,6 +23,58 @@ Install dependencies, download latest telemetry frame definitions and generate t
 $> chmod +x init.sh
 $> ./init.sh
 ```
+
+## Make targets
+
+```
+all        : Shortcut for build
+compile    : Compile cflie.hex. WARNING: Do NOT update version.c
+build      : Update version.c and compile cflie.elf/hex
+clean_o    : Clean only the Objects files, keep the executables (ie .elf, .hex)
+clean      : Clean every compiled files
+mrproper   : Clean every compiled files and the classical editors backup files
+
+cload      : If the crazyflie-clients-python is placed on the same directory level and
+             the Crazyradio/Crazyradio PA is inserted it will try to flash the firmware
+             using the wireless bootloader.
+flash      : Flash .elf using OpenOCD
+halt       : Halt the target using OpenOCD
+reset      : Reset the target using OpenOCD
+openocd    : Launch OpenOCD
+```
+
+## Flashing
+Writing a new binary to the Crazyflie is called flashing (writing it to the flash memory). This page describes how to flash from the command line and there are a few different ways to do it.
+
+### Using Crazyradio
+
+The most common way to flash is probably to use the Crazyradio.
+
+### Prerequisites
+* A Crazyradio with drivers installed
+* [crazyflie-clients-python](https://github.com/bitcraze/crazyflie-clients-python) placed on the same directory level in the file tree
+* The firmware has been built
+* The current working directory is the root of the frazyflie-firmware project
+
+### Manually entering bootloader mode
+
+* Turn the Crazyflie off
+* Start the Crazyflie in bootloader mode by pressing the power button for 3 seconds. Both the blue LEDs will blink.
+* In your terminal, run `make cload`
+
+It will try to find a Crazyflie in bootloader mode and flash the binary to it.
+
+Warning: if multiple Crazyflies within range are in bootloader mode the result is unpredictable. This method is not suitable in classroom situation where it is likely that several students are flashing at the same time. Also remember that the Crazyradio PA often reaches into the next room.
+
+### Automatically enter bootloader mode
+
+* Add the address of the crazyflie to the [`config.mk`](#configmk) file, for instance `CLOAD_CMDS = -w radio://0/80/2M`
+* Make sure the Crazyflie is on
+* In your terminal, run `make cload`
+
+It will connect to the Crazyflie with the specified address, put it in bootloader mode and flash the binary. This method is suitable for classroom situations.
+
+Note: this method does not work if the Crazyflie does not start, for instance if the current flashed binary is corrupt. You will have to fall back to manually entering bootloader mode.
 
 
 ## Authors

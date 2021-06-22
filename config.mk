@@ -18,6 +18,14 @@ APP_STACKSIZE = 300
 # Set the task priority between 0 and 5. Default is 0 (same as IDLE).
 APP_PRIORITY = 0
 
+# Crazyflie 2 Platform
+PLATFORM=CF2
+
+# DEBUG=1 allows to get more information from the Crazyflie console when
+# it starts. Debug should not be enabled if you intend to fly the
+# Crazyflie out of the lab (it disables the watchdog).
+DEBUG=1
+
 ## Weight of the Crazyflie, including decks. The default setting is a Crazyflie 2.X without decks.
 # CFLAGS += -DCF_MASS=0.027f // in kg
 
