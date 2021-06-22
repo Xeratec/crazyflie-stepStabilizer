@@ -1,0 +1,142 @@
+{
+    "configurations": [
+        {
+            "name": "CF2 Linux",
+            "includePath": [
+                "${workspaceFolder}/src/inc/**",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/**",
+                "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/Core/Include",
+                "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/DSP/Include",
+                "${workspaceFolder}/extern/crazyflie-firmware/vendor/libdw1000/inc",
+                "${workspaceFolder}/extern/crazyflie-firmware/vendor/FreeRTOS/include",
+                "${workspaceFolder}/extern/crazyflie-firmware/vendor/FreeRTOS/portable/GCC/ARM_CM4F",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/config",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/platform",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/deck/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/deck/drivers/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/drivers/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/drivers/bosch/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/hal/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/modules/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/modules/interface/kalman_core",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/modules/interface/lighthouse",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/utils/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/utils/interface/kve",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/utils/interface/lighthouse",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/utils/interface/tdoa",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/FatFS",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/CMSIS/STM32F4xx/Include",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/STM32_USB_Device_Library/Core/inc",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/STM32_USB_OTG_Driver/inc",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/STM32F4xx_StdPeriph_Driver/inc",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1/core/inc",
+                "/usr/arm-none-eabi/include/**",
+                "/lib/gcc/arm-none-eabi/**"
+            ],
+            "defines": [
+                "CRAZYFLIE_FW",
+                "ARM_MATH_CM4",
+                "__FPU_PRESENT=1",
+                "STM32F4XX",
+                "STM32F40_41xxx",
+                "HSE_VALUE=8000000",
+                "USE_STDPERIPH_DRIVER",
+                "DEBUG",
+                "APP=1"
+            ],
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++11",
+            "intelliSenseMode": "gcc-arm",
+            "compilerPath": "/usr/bin/arm-none-eabi-gcc",
+            "compilerArgs": [
+                "-mcpu=cortex-m4",
+                "--specs=nano.specs",
+                "-mfpu=fpv4-sp-d16",
+                "-mfloat-abi=hard",
+                "-mthumb",
+                "-g3",
+                "-gdwarf-2",
+                "-MMD",
+                "-MP"
+            ],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/src/**",
+                    "/usr/arm-none-eabi/include/**",
+                    "/lib/gcc/arm-none-eabi/**"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
+        },
+        {
+            "name": "CF2 MacOS",
+            "includePath": [
+                "${workspaceFolder}/src/inc/**",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/**",
+                "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/Core/Include",
+                "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/DSP/Include",
+                "${workspaceFolder}/extern/crazyflie-firmware/vendor/libdw1000/inc",
+                "${workspaceFolder}/extern/crazyflie-firmware/vendor/FreeRTOS/include",
+                "${workspaceFolder}/extern/crazyflie-firmware/vendor/FreeRTOS/portable/GCC/ARM_CM4F",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/config",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/platform",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/deck/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/deck/drivers/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/drivers/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/drivers/bosch/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/hal/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/modules/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/modules/interface/kalman_core",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/modules/interface/lighthouse",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/utils/interface",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/utils/interface/kve",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/utils/interface/lighthouse",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/utils/interface/tdoa",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/FatFS",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/CMSIS/STM32F4xx/Include",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/STM32_USB_Device_Library/Core/inc",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/STM32_USB_OTG_Driver/inc",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/STM32F4xx_StdPeriph_Driver/inc",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1",
+                "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1/core/inc",
+                "/Applications/ARM/arm-none-eabi/include/**",
+            ],
+            "defines": [
+                "CRAZYFLIE_FW",
+                "ARM_MATH_CM4",
+                "__FPU_PRESENT=1",
+                "STM32F4XX",
+                "STM32F40_41xxx",
+                "HSE_VALUE=8000000",
+                "USE_STDPERIPH_DRIVER",
+                "DEBUG",
+                "APP=1"
+            ],
+            "cStandard": "gnu11",
+            "cppStandard": "gnu++11",
+            "intelliSenseMode": "gcc-arm",
+            "compilerPath": "/Applications/ARM/bin/arm-none-eabi-gcc",
+            "compilerArgs": [
+                "-mcpu=cortex-m4",
+                "--specs=nano.specs",
+                "-mfpu=fpv4-sp-d16",
+                "-mfloat-abi=hard",
+                "-mthumb",
+                "-g3",
+                "-gdwarf-2",
+                "-MMD",
+                "-MP"
+            ],
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/src/**",
+                    "/Applications/ARM/arm-none-eabi/include/**",
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
+        }
+    ],
+    "version": 4
+}
+ 

@@ -60,7 +60,6 @@ bin/*
 .project
 .pydevproject
 .settings/*
-.vscode/*
 *~
 tools/make/config.mk
 cflie.*
@@ -78,3 +77,7 @@ current_platform.mk
 
 /docs/.jekyll-metadata
 docs/.jekyll-cache
+
+# VS Code
+.vscode/*
+!.vscode/c_cpp_properties.json
