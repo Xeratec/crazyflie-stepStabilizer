@@ -311,7 +311,7 @@ ifeq ($(DEBUG), 1)
   CFLAGS += -O0 -DDEBUG
 
   # Prevent silent errors when converting between types (requires explicit casting)
-  CFLAGS += -Wconversion
+#   CFLAGS += -Wconversion
 else
   CFLAGS += -Os
 
