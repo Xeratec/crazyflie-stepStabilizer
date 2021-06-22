@@ -3,6 +3,7 @@ from threading import Thread
 import math
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie import Crazyflie
+from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 import cflib.crtp
 from datetime import datetime
 import sys
@@ -99,7 +100,7 @@ class CrazyFlieCommander(Thread):
         self.data_logging_en = False
         self.log_list = log_list
         self.text = " "
-        self.cf = Crazyflie(rw_cache='./cache')
+        self.scf = SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache'))
         self.is_connected = False
         self.start()
         self.t0 = time0
@@ -114,15 +115,15 @@ class CrazyFlieCommander(Thread):
 
     def connect_tocf(self):
         # Connect some callbacks from the Crazyflie API
-        self.cf.connected.add_callback(self._connected)
-        self.cf.disconnected.add_callback(self._disconnected)
-        self.cf.connection_failed.add_callback(self._connection_failed)
-        self.cf.connection_lost.add_callback(self._connection_lost)
+        self.scf.cf.connected.add_callback(self._connected)
+        self.scf.cf.disconnected.add_callback(self._disconnected)
+        self.scf.cf.connection_failed.add_callback(self._connection_failed)
+        self.scf.cf.connection_lost.add_callback(self._connection_lost)
 
         print('Connecting to %s' % self.uri)
 
         # Try to connect to the Crazyflie
-        self.cf.open_link(self.uri)
+        self.scf.cf.open_link(self.uri)
 
 
     def _connected(self, link_uri):
@@ -146,7 +147,7 @@ class CrazyFlieCommander(Thread):
         try:
             for i in range(logs_nr):
                 current_log = logs[i]
-                self.cf.log.add_config(current_log)
+                self.scf.cf.log.add_config(current_log)
                 # This callback will receive the data
                 current_log.data_received_cb.add_callback(self._stab_log_data)
                 # Start the logging
@@ -159,15 +160,15 @@ class CrazyFlieCommander(Thread):
 
     def config(self):
         time.sleep(0.2)
-        self.cf.param.set_value('stabilizer.estimator', '2')
-        # self.cf.param.set_value('locSrv.extQuatStdDev', 0.05)
-        # self.cf.param.set_value('stabilizer.controller', '2')
-        self.cf.param.set_value('commander.enHighLevel', '1')
+        self.scf.cf.param.set_value('stabilizer.estimator', '2')
+        # self.scf.cfparam.set_value('locSrv.extQuatStdDev', 0.05)
+        # self.scf.cfparam.set_value('stabilizer.controller', '2')
+        self.scf.cf.param.set_value('commander.enHighLevel', '1')
         print("CF configured!")
         print("Reset estimator")
-        self.cf.param.set_value('kalman.resetEstimation', '1')
+        self.scf.cf.param.set_value('kalman.resetEstimation', '1')
         time.sleep(0.1)
-        self.cf.param.set_value('kalman.resetEstimation', '0')
+        self.scf.cf.param.set_value('kalman.resetEstimation', '0')
 
     def _stab_log_data(self, timestamp, data, logconf):
         t1 = datetime.now()
@@ -203,8 +204,8 @@ class CrazyFlieCommander(Thread):
         qy = quat[2]
         qz = quat[3]
 
-        # cf.extpos.send_extpose(x, y, z, qx, qy, qz, qw)
-        cf.extpos.send_extpos(x, y, z)
+        # scf.cf.extpos.send_extpose(x, y, z, qx, qy, qz, qw)
+        scf.cf.extpos.send_extpos(x, y, z)
 
     def log(self, timestamp, id_var, value):
         data_row = np.array([timestamp, id_var, value]).reshape(1, -1)
