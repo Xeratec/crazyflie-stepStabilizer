@@ -78,6 +78,14 @@ current_platform.mk
 /docs/.jekyll-metadata
 docs/.jekyll-cache
 
+# Crazyflie
+cache
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
 # VS Code
 .vscode/*
 !.vscode/c_cpp_properties.json
