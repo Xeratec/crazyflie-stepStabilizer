@@ -1,4 +1,5 @@
 import sys
+import os
 sys.path.append("../extern/pyvicon/")
 
 import json
@@ -63,7 +64,7 @@ class Logger(Thread):
                 # We can move in all directions
                 print('Moving forward 0.5m')
                 
-                mc.forward(1)
+                mc.forward(1.5)
                 # Wait a bit
                 time.sleep(2)
 
@@ -96,12 +97,12 @@ class Logger(Thread):
 
 
 if __name__ == '__main__':
-    log_config_vicon = None
+    log_config_vicon = ["Drone", "Box"]
     # Variables to log from CF
     log_config_crazyflie = ["stateEstimate.x", "stateEstimate.y", "stateEstimate.z", "stateEstimate.vz", "gyro.z", "posCtl.targetZ", "range.zrange"]
 
     ## run function in the background
-    logger = Logger(filename=sys.argv[1], log_config_vicon=log_config_vicon, log_config_crazyflie=log_config_crazyflie)
+    logger = Logger(filename=os.path.join("logs", sys.argv[1]), log_config_vicon=log_config_vicon, log_config_crazyflie=log_config_crazyflie)
     
     ## will not exit if function finishes, only when
     ## "q" is entered, but this is just a simple example
