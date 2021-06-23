@@ -101,6 +101,7 @@ class _StableSetPointThread(Thread):
     def set_z_offset(self, offset_z):
         self._z_offset = offset_z
         self._update_z_in_setpoint()
+        self._cf.commander.send_hover_setpoint(*self._hover_setpoint)
 
     def run(self):
         while True:
@@ -126,7 +127,7 @@ class _StableSetPointThread(Thread):
 
     def _update_z_in_setpoint(self):
         z_setpoint = max(0, self._current_z() + self._z_offset)
-        if VERBOSE:
+        if self._z_offset != 0:
             print("[SMC] Z-Setpoint: {}".format(z_setpoint))
         self._hover_setpoint[self.ABS_Z_INDEX] = z_setpoint
         

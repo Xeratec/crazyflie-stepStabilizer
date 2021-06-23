@@ -27,6 +27,7 @@ class Logger(Thread):
         self.cf = None
         self.mc = None
         self.vicon = None
+        self.state = "TAKEOFF"
        
         cflib.crtp.init_drivers(enable_debug_driver=False)
         drones = cflib.crtp.scan_interfaces()
@@ -40,7 +41,7 @@ class Logger(Thread):
         if log_config_vicon is not None:
             self.vicon = ViconWrapper(ip="192.168.10.1", period=log_period_vicon, subjects=log_config_vicon, time0=self.zero_time, filename=filename)
         if log_config_crazyflie is not None:
-            self.cf = CrazyFlieWrapper("radio://0/80/2M", log_list=log_config_crazyflie, sampling_period=log_period_crazyflie, time0=self.zero_time, filename=filename)
+            self.cf = CrazyFlieWrapper("radio://0/80/2M", log_list=log_config_crazyflie, sampling_period=log_period_crazyflie, time0=self.zero_time, filename=filename, logger = self)
             
         if log_config_crazyflie is not None:
             self.cf.start()
@@ -66,9 +67,11 @@ class Logger(Thread):
                 print('[LOG] Taking off!')
                 self.cf.mc.take_off()
                 time.sleep(1)
+                self.state = "FLY"
 
                 print('[LOG] Moving forward')
-                self.cf.mc.forward(2)
+                self.cf.mc.forward(1.5)
+                self.state = "LAND"
 
             except Exception:
                 print("[LOG] Illegal command")

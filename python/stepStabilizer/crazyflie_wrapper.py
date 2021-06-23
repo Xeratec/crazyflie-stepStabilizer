@@ -11,20 +11,23 @@ from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 
 from .stable_motion_commander import StableMotionCommander
+from .step_detecition import StepDetector
 
 VERBOSE = False
 
 
 class CrazyFlieWrapper(Thread):
-    def __init__(self, uri, log_list, sampling_period, time0, filename):
+    def __init__(self, uri, log_list, sampling_period, time0, filename, logger):
         Thread.__init__(self)
         self.uri = uri
+        self.logger = logger
         self.period = sampling_period
         self.data_log = np.array([])
         self.data_logging_en = False
         self.log_list = log_list
         self.scf = SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache'))
         self.mc = StableMotionCommander(self.scf, default_height = 1)
+        self.sd = StepDetector()
         self.is_connected = False
         self.is_running = False
         self.t0 = time0
@@ -109,10 +112,15 @@ class CrazyFlieWrapper(Thread):
             for i in range(len(names)):
                 self.log(timestamp, names[i], out[0, i])
                 self.current_log[names[i]] = out[0, i]
-                if names[i] == "range.zrange":
-                    if VERBOSE:
-                        print("[CFW]", timestamp, names[i], out[0, i])
-                    self.mc.set_z_offset(-0.5)
+                if self.logger.state == "FLY":
+                    if names[i] == "range.zrange":
+                        if VERBOSE:
+                            print("[CFW]", timestamp, names[i], out[0, i])
+                        z_offset, z_slope =  self.sd.update_offset(timestamp, out[0,i])
+
+                        self.log(timestamp, "range.zslope", z_slope)
+                        self.log(timestamp, "range.zoffset", z_offset)
+                        self.mc.set_z_offset(z_offset)
                 
     def _connection_failed(self, link_uri, msg):
         print('[CFW] Connection to %s failed: %s' % (link_uri, msg))
