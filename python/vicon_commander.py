@@ -25,6 +25,7 @@ class ViconWrapper(Thread):
         self.position = dict([])
         self.quaternions = dict([])
         self.t0 = time0
+        self.is_running = False
         self.filename = filename
 
     def run(self):
@@ -44,7 +45,8 @@ class ViconWrapper(Thread):
         self.vicon.set_axis_mapping(Direction.Forward, Direction.Left, Direction.Up)
 
     def loop(self):
-        while 1:
+        self.is_running = True
+        while self.is_running:
             while self.vicon.get_frame() != Result.Success:
                 time.sleep(self.period)
             subj_count = self.vicon.get_subject_count()
@@ -80,8 +82,12 @@ class ViconWrapper(Thread):
             self.data_log = np.append(self.data_log, data_row, axis=0)
 
     def save_log(self):
+        self.is_running = False
         np.savetxt(self.filename + "vicon.csv", self.data_log, fmt='%s', delimiter=',')
         print("Log Saved!")
+        # if self.is_running: 
+        #     time.sleep(0.01)
+        #     self.join()
 
     def logging_enabled(self, val):
         if val == 0:
@@ -103,15 +109,16 @@ class CrazyFlieCommander(Thread):
         self.scf = SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache'))
         self.is_connected = False
         self.start()
+        self.is_running = False
         self.t0 = time0
         self.filename = filename
         self.current_log = dict([])
 
     def run(self):
+        self.is_running = True
         self.connect_tocf()
         while self.is_connected == False:
             time.sleep(0.01)
-        self.config()
 
     def connect_tocf(self):
         # Connect some callbacks from the Crazyflie API
@@ -134,6 +141,7 @@ class CrazyFlieCommander(Thread):
 
     def logging(self):
         N = len(self.log_list)
+        print(self.log_list)
         logs_nr = math.ceil(N / 6.0)
 
         logs = []
@@ -216,6 +224,10 @@ class CrazyFlieCommander(Thread):
 
     def save_log(self):
         np.savetxt(self.filename + "cf.csv", self.data_log, fmt='%s', delimiter=',')
+        self.scf.cf.close_link()
+        # if self.is_running:
+        #     time.sleep(0.1)
+        #     self.join()
 
     def logging_enabled(self, val):
         if val == 0:

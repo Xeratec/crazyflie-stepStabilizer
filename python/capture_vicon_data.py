@@ -19,8 +19,9 @@ class Logger(Thread):
         self.zero_time = datetime.now()
         self.log_config_vicon = log_config_vicon
         self.log_config_crazyflie = log_config_crazyflie
-        self.abort = False
+        self.is_running = False
         self.cf = None
+        self.mc = None
         self.vicon = None
        
         cflib.crtp.init_drivers(enable_debug_driver=False)
@@ -39,6 +40,7 @@ class Logger(Thread):
         self.start()
 
     def run(self):
+        self.is_running = True
         while(self.cf.is_connected != True):
             pass
 
@@ -51,72 +53,61 @@ class Logger(Thread):
         if self.log_config_crazyflie is not None:
             self.cf.logging_enabled(1)
 
-            self.mc = MotionCommander(self.cf.scf)
+            self.mc = MotionCommander(self.cf.scf, default_height = 1)
             with self.mc as mc:
 
                 print('Taking off!')
-                mc.up(0.7)
-                time.sleep(1)
-
-                print('Moving up 0.2m')
-                mc.up(0.7)
-                # Wait a bit
                 time.sleep(1)
 
                 # There is a set of functions that move a specific distance
                 # We can move in all directions
                 print('Moving forward 0.5m')
                 
-                mc.forward(0.5)
+                mc.forward(1)
                 # Wait a bit
-                time.sleep(10)
+                time.sleep(2)
 
-                # We land when the MotionCommander goes out of scope
-                print('Landing!')
-
-        while self.abort == False:
-            pass
-
+        self.is_running = False
         self.stop()
 
         filename = 'beep.wav'
         wave_obj = sa.WaveObject.from_wave_file(filename)
         play_obj = wave_obj.play()
-        play_obj.wait_done()  # Wa
+        play_obj.wait_done() 
+
+        return
 
     def stop(self):
-        self.abort = True
+        # if self.mc is not None:
+        #     print('Landing!')
+        #     self.mc.land()
+
         if self.log_config_vicon is not None:
             self.vicon.logging_enabled(0)
             self.vicon.save_log()
         if self.log_config_crazyflie is not None and self.cf is not None:
             self.cf.logging_enabled(0)     
             self.cf.save_log()
-            print('Landing!')
-            self.mc.land()
+
+        if self.is_running:
+            self.is_running = False
+            time.sleep(0.1)
+            self.join()
 
 
 if __name__ == '__main__':
     log_config_vicon = None
     # Variables to log from CF
-    log_config_crazyflie = ["stateEstimate.x", "stateEstimate.y", "stateEstimate.z", "stateEstimate.roll",
-                    "stateEstimate.pitch", "stateEstimate.yaw"]
+    log_config_crazyflie = ["stateEstimate.x", "stateEstimate.y", "stateEstimate.z", "stateEstimate.vz", "gyro.z", "posCtl.targetZ", "range.zrange"]
 
-     ## run function in the background
+    ## run function in the background
     logger = Logger(filename=sys.argv[1], log_config_vicon=log_config_vicon, log_config_crazyflie=log_config_crazyflie)
     
     ## will not exit if function finishes, only when
     ## "q" is entered, but this is just a simple example
-    while True:
+    while logger.is_running:
         if keyboard.is_pressed('q'):
+            time.sleep(0.1)
+            print("Aborting...")
+            logger.stop()
             break
-   
-    print("Aborting...")
-    logger.stop()
-
-
-
-
-   
-
-   
