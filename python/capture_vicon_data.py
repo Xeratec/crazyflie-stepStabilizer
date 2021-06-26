@@ -18,7 +18,7 @@ from stepStabilizer.vicon_wrapper import ViconWrapper
 import cflib
 
 class Logger(Thread):
-    def __init__(self, filename, log_config_vicon, log_config_crazyflie, log_period_vicon=20, log_period_crazyflie=50):
+    def __init__(self, filename, log_config_vicon, log_config_crazyflie, log_period_vicon=20, log_period_crazyflie=100):
         Thread.__init__(self)
         self.zero_time = datetime.now()
         self.log_config_vicon = log_config_vicon
@@ -41,6 +41,7 @@ class Logger(Thread):
         if log_config_vicon is not None:
             self.vicon = ViconWrapper(ip="192.168.10.1", period=log_period_vicon, subjects=log_config_vicon, time0=self.zero_time, filename=filename)
         if log_config_crazyflie is not None:
+            print("Started")
             self.cf = CrazyFlieWrapper("radio://0/80/2M", log_list=log_config_crazyflie, sampling_period=log_period_crazyflie, time0=self.zero_time, filename=filename, logger = self)
             
         if log_config_crazyflie is not None:
@@ -51,7 +52,9 @@ class Logger(Thread):
         self.start()
 
     def run(self):
-       
+        if self.cf is None:
+            return
+
         while(self.cf.is_connected != True):
             pass
     
@@ -65,13 +68,17 @@ class Logger(Thread):
             self.cf.logging_enabled(1)
             try:
                 print('[LOG] Taking off!')
-                self.cf.mc.take_off()
-                time.sleep(1)
+                self.cf.mc.take_off(0.5)
+                time.sleep(0.5)
                 self.state = "FLY"
+                time.sleep(3)
 
                 print('[LOG] Moving forward')
-                self.cf.mc.forward(1.5)
-                self.state = "LAND"
+                #self.cf.mc.forward(0.5, velocity=0.1)
+                time.sleep(1)
+                # self.state = "LAND"
+
+                self.cf.mc.turn_left(180)
 
             except Exception:
                 print("[LOG] Illegal command")
@@ -94,13 +101,13 @@ if __name__ == '__main__':
     log_config_vicon = None
 
     # Variables to log from CF
-    log_config_crazyflie = ["stateEstimate.z", "stateEstimate.vz", "gyro.z", "posCtl.targetZ", "range.zrange"]
+    log_config_crazyflie = ["stateEstimate.z", "acc.z", "stateEstimate.vz", "posCtl.targetZ", "range.zrange"]
 
     ## run function in the background
-    logger = Logger(filename=os.path.join("logs", sys.argv[1]), log_config_vicon=log_config_vicon, log_config_crazyflie=log_config_crazyflie)
+    logger = Logger(filename=os.path.join("logs", sys.argv[1]+"_"), log_config_vicon=log_config_vicon, log_config_crazyflie=log_config_crazyflie)
     
-    ## will not exit if function finishes, only when
-    ## "q" is entered, but this is just a simple example
+    if logger.cf is None:
+        exit(1)
 
     # Wait for esablished connection
     while(logger.cf.is_connected != True):
@@ -119,6 +126,8 @@ if __name__ == '__main__':
             time.sleep(1)
             break
 
+    time.sleep(10)
+    
     if log_config_vicon is not None:
         logger.vicon.logging_enabled(0)
         logger.vicon.save_log()

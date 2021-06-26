@@ -26,7 +26,7 @@ class CrazyFlieWrapper(Thread):
         self.data_logging_en = False
         self.log_list = log_list
         self.scf = SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache'))
-        self.mc = StableMotionCommander(self.scf, default_height = 1)
+        self.mc = StableMotionCommander(self.scf, default_height = 0.5, log_filename=filename, time0 = time0)
         self.sd = StepDetector()
         self.is_connected = False
         self.is_running = False
@@ -96,7 +96,7 @@ class CrazyFlieWrapper(Thread):
         # self.scf.cfparam.set_value('stabilizer.controller', '2')
         
         # Set PID Controller
-        self.scf.cf.param.set_value('commander.enHighLevel', '1')
+        self.scf.cf.param.set_value('commander.enHighLevel', '0')
         print("[CFW] CF configured!")
         
         print("[CFW] Reset estimator")
@@ -104,23 +104,31 @@ class CrazyFlieWrapper(Thread):
         time.sleep(0.1)
         self.scf.cf.param.set_value('kalman.resetEstimation', '0')
 
-    def _stab_log_data(self, timestamp, data, logconf):
+    def _stab_log_data(self, timestamp_cf, data, logconf):
         out = np.fromiter(data.values(), dtype=float).reshape(1, -1)
         names = list(data.keys())
+       
         if self.data_logging_en:    
             timestamp = round(1000 * (datetime.now() - self.t0).total_seconds(), 3)
+            print(timestamp-timestamp_cf)
             for i in range(len(names)):
-                self.log(timestamp, names[i], out[0, i])
                 self.current_log[names[i]] = out[0, i]
                 if self.logger.state == "FLY":
+                    self.log(timestamp, names[i], out[0, i])
                     if names[i] == "range.zrange":
-                        if VERBOSE:
-                            print("[CFW]", timestamp, names[i], out[0, i])
-                        z_offset, z_slope =  self.sd.update_offset(timestamp, out[0,i])
-
-                        self.log(timestamp, "range.zslope", z_slope)
-                        self.log(timestamp, "range.zoffset", z_offset)
-                        self.mc.set_z_offset(z_offset)
+                        slope = self.sd.update_z_range(timestamp, out[0,i])
+                        self.log(timestamp, "range.zslope", slope)
+                    if names[i] == "gyro.z":
+                        slope = self.sd.update_z_gyro(timestamp, out[0,i])
+                        self.log(timestamp, "gyro.zslope", slope)
+                    if names[i] == "acc.z":
+                        slope = self.sd.update_z_acc(timestamp, out[0,i])
+                        self.log(timestamp, "acc.zslope", slope)
+                    
+                    z_offset, z_slope = self.sd.get_offset()
+                    #self.mc.set_z_offset(z_offset)
+                    self.log(timestamp, "zslope", z_slope)
+                    self.log(timestamp, "z_offset", z_offset)
                 
     def _connection_failed(self, link_uri, msg):
         print('[CFW] Connection to %s failed: %s' % (link_uri, msg))

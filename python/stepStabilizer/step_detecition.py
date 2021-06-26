@@ -7,44 +7,65 @@ from scipy.stats import linregress
 VERBOSE = False
 
 class StepDetector():
-    def __init__(self, num_points=5):
+    def __init__(self, num_points=8):
         # Number of datapoints to consider
-        self.num_points = 5
+        self.num_points = num_points
 
-        self.data = collections.deque(maxlen=num_points)
-        self.timestamps =  collections.deque(maxlen=num_points)
+        self.z_range_data       = collections.deque(maxlen=num_points)
+        self.z_range_timestamps = collections.deque(maxlen=num_points)
+        self.z_gyro_data        = collections.deque(maxlen=num_points)
+        self.z_gyro_timestamps  = collections.deque(maxlen=num_points)
+        self.z_acc_data         = collections.deque(maxlen=num_points)
+        self.z_acc_timestamps   = collections.deque(maxlen=num_points)
 
-        self.offset = 0
+        self.z_offset      = 0
+        self.z_range_slope = 0
+        self.z_gyro_slope  = 0
+        self.z_acc_slope  = 0
+        self.step_detector = 0
 
     def get_offset(self): 
-        return self.offset
-    
-    def update_offset(self, timestamp, value):
-        z_slope = self._update_model(timestamp, value)
+        if self.z_acc_slope != 0:
+            self.step_detector = 1E6*self.z_range_slope/(abs(self.z_acc_slope)+20)
+        else:
+            self.step_detector = 0
+        
+        # if self.step_detector > 5000 and self.z_offset >= 0:
+        #     self.z_offset = -0.15
 
-        return self.offset, z_slope
-
-    def _update_model(self, timestamp, value):
-        if len(self.data) == 0:
-            for x in range(self.num_points):
-                self.data.append(value)
-                self.timestamps.append(timestamp)
-            return 0
-
-        self.timestamps.append(timestamp)
-        self.data.append(value)
+        # if self.step_detector < -5000 and self.z_offset < 0:
+        #     self.z_offset = 0
 
         if VERBOSE:
-            print(np.array(self.timestamps), np.array(self.data))
+            print(np.array(self.z_range_timestamps), np.array(self.z_range_data), np.array(self.z_gyro_timestamps), np.array(self.z_gyro_data))
 
-        slope = linregress(np.array(self.timestamps), np.array(self.data))[0]
-
-        # if slope > 0.4:
-        #     self.offset = -0.3
-        #     print("[SD] ", slope)
+        return self.z_offset, self.step_detector
+    
+    def update_z_range(self, timestamp, value):     
+        self.z_range_data.append(value)
+        self.z_range_timestamps.append(timestamp)
+        if len(self.z_range_data) < self.num_points:
+            return 0
+        self.z_range_slope = linregress(np.array(self.z_range_timestamps), np.array(self.z_range_data))[0]
         
-        if slope < -0.1:
-             self.offset = -0.1
-             print("[SD] ", slope)
+        return self.z_range_slope
 
-        return slope
+    def update_z_acc(self, timestamp, value):     
+        self.z_acc_data.append(value)
+        self.z_acc_timestamps.append(timestamp)
+        if len(self.z_range_data) < self.num_points:
+            return 0
+        self.z_acc_slope = linregress(np.array(self.z_acc_timestamps), np.array(self.z_acc_data))[0]
+        
+        return self.z_acc_slope
+
+    def update_z_gyro(self, timestamp, value):
+        self.z_gyro_data.append(value)
+        self.z_gyro_timestamps.append(timestamp)
+
+        if len(self.z_gyro_data) < self.num_points:
+            return 0
+        self.z_gyro_slope  = linregress(np.array(self.z_gyro_timestamps), np.array(self.z_gyro_data))[0]
+
+        return self.z_gyro_slope     
+       

@@ -1,5 +1,9 @@
 import math
 import time
+
+import numpy as np
+
+from datetime import datetime
 from queue import Empty
 from queue import Queue
 from threading import Thread
@@ -9,13 +13,14 @@ from cflib.positioning.motion_commander import MotionCommander
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 
 VERBOSE = False
+LOG = True
 
 class StableMotionCommander(MotionCommander):
     """The stable motion commander"""
     VELOCITY = 0.2
     RATE = 360.0 / 5
 
-    def __init__(self, crazyflie, default_height=0.3):
+    def __init__(self, crazyflie, default_height=0.5, log_filename = "logs/test", time0 = 0):
         """
         Construct an instance of a MotionCommander
 
@@ -23,6 +28,8 @@ class StableMotionCommander(MotionCommander):
         :param default_height: the default height to fly at
         """
         MotionCommander.__init__(self, crazyflie, default_height)
+        self.filename = log_filename
+        self.t0 = time0
 
 
     def take_off(self, height=None, velocity=VELOCITY):
@@ -45,7 +52,7 @@ class StableMotionCommander(MotionCommander):
         self._is_flying = True
         self._reset_position_estimator()
 
-        self._thread = _StableSetPointThread(self._cf)
+        self._thread = _StableSetPointThread(self._cf, log_filename=self.filename, time0 = self.t0)
         self._thread.start()
 
         if height is None:
@@ -62,12 +69,13 @@ class _StableSetPointThread(Thread):
     UPDATE_PERIOD = 0.2
     ABS_Z_INDEX = 3
 
-    def __init__(self, cf, update_period=UPDATE_PERIOD):
+    def __init__(self, cf, update_period=UPDATE_PERIOD, log_filename = "logs/test", time0 = 0):
         Thread.__init__(self)
         self.update_period = update_period
 
         self._queue = Queue()
         self._cf = cf
+        self.filename  = log_filename
 
         self._hover_setpoint = [0.0, 0.0, 0.0, 0.0]
 
@@ -75,7 +83,10 @@ class _StableSetPointThread(Thread):
         self._z_velocity = 0.0
         self._z_base_time = 0.0
 
+        self._hover_setpoint_log = np.array([])
+
         self._z_offset = 0
+        self.t0 = time0
 
     def stop(self):
         """
@@ -83,6 +94,9 @@ class _StableSetPointThread(Thread):
 
         :return:
         """
+        if LOG:
+            print("[SMC] Saved logo to", self.filename)
+            np.savetxt(self.filename + "cf_SMC.csv", self._hover_setpoint_log, fmt='%s', delimiter=',')
         self._queue.put(self.TERMINATE_EVENT)
         self.join()
 
@@ -127,13 +141,22 @@ class _StableSetPointThread(Thread):
 
     def _update_z_in_setpoint(self):
         z_setpoint = max(0, self._current_z() + self._z_offset)
-        if self._z_offset != 0:
-            print("[SMC] Z-Setpoint: {}".format(z_setpoint))
+        if LOG:
+            self._log( (datetime.now()-self.t0 ).total_seconds(), "z_setpoint", z_setpoint)
+            
         self._hover_setpoint[self.ABS_Z_INDEX] = z_setpoint
         
 
     def _current_z(self):
         now = time.time()
         return self._z_base + self._z_velocity * (now - self._z_base_time)
+
+    def _log(self, timestamp, id_var, value):
+        data_row = np.array([timestamp, id_var, value]).reshape(1, -1)
+        if self._hover_setpoint_log.shape[0] == 0:
+            self._hover_setpoint_log = data_row
+        else:
+            self._hover_setpoint_log = np.append(self._hover_setpoint_log, data_row, axis=0)
+
 
 
