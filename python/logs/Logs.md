@@ -1,5 +1,8 @@
-# Tests
-Log 1-3 not good
-Log 4 good
-Log 5 good with video
-Log 6 good with video
+# Tests with Vicon
+test_04: good
+test_05: good, with video (Luca)
+test_06: good, with video (Luca)
+
+# Offline Python Test
+offline_python_01: first half working flight
+offline_python_02: a bit more reliable, reduced flight velocity

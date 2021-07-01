@@ -85,7 +85,7 @@ cache
 __pycache__/
 *.py[cod]
 *$py.class
-
+.ipynb_checkpoints
 # VS Code
 .vscode/*
 !.vscode/c_cpp_properties.json
