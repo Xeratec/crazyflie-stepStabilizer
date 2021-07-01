@@ -62,6 +62,7 @@
             ],
             "browse": {
                 "path": [
+                    "${workspaceFolder}/extern/crazyflie-firmware/src/**",
                     "${workspaceFolder}/src/**",
                     "/usr/arm-none-eabi/include/**",
                     "/lib/gcc/arm-none-eabi/**"
@@ -73,6 +74,7 @@
             "name": "CF2 MacOS",
             "includePath": [
                 "${workspaceFolder}/src/inc/**",
+                "${workspaceFolder}/inc/**",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/**",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/Core/Include",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/DSP/Include",
@@ -100,7 +102,7 @@
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/STM32F4xx_StdPeriph_Driver/inc",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1/core/inc",
-                "/Applications/ARM/arm-none-eabi/include/**",
+                "/Applications/ARM/arm-none-eabi/include/**"
             ],
             "defines": [
                 "CRAZYFLIE_FW",
@@ -130,8 +132,9 @@
             ],
             "browse": {
                 "path": [
+                    "${workspaceFolder}/extern/crazyflie-firmware/src/**",
                     "${workspaceFolder}/src/**",
-                    "/Applications/ARM/arm-none-eabi/include/**",
+                    "/Applications/ARM/arm-none-eabi/include/**"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             }
@@ -139,4 +142,3 @@
     ],
     "version": 4
 }
- 

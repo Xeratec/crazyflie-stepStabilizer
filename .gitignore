@@ -89,3 +89,8 @@ __pycache__/
 # VS Code
 .vscode/*
 !.vscode/c_cpp_properties.json
+
+# OSX specific
+.metadata/*
+.DS_Store
+*/.DS_Store

@@ -3,9 +3,11 @@ VPATH += ./src
 
 ############### Source files configuration ################
 PROJ_OBJ += app_stepStabilizer_main.o
+PROJ_OBJ += buffered_linear_regression.o
 
 ############### Compilation configuration ################
 INCLUDES += -I./src/inc
+INCLUDES += -I./inc
 
 
 ############### Configuration ################
@@ -16,7 +18,7 @@ APP = 1
 APP_STACKSIZE = 300
 
 # Set the task priority between 0 and 5. Default is 0 (same as IDLE).
-APP_PRIORITY = 0
+APP_PRIORITY = 3
 
 # Crazyflie 2 Platform
 PLATFORM=CF2
@@ -77,7 +79,7 @@ DEBUG=1
 # CFLAGS += -DDEBUG_QUEUE_MONITOR
 
 ## Automatically reboot to bootloader before flashing
-# CLOAD_CMDS = -w radio://0/100/2M/E7E7E7E7E7
+ CLOAD_CMDS = -w radio://0/81/2M/E7E7E7E7E7
 
 ## Set number of anchor in LocoPositioningSystem
 # CFLAGS += -DLOCODECK_NR_OF_ANCHORS=8
