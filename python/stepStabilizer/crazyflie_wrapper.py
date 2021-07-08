@@ -1,5 +1,6 @@
 import math
 import sys
+import signal
 import time
 import numpy as np
 from datetime import datetime
@@ -19,20 +20,27 @@ VERBOSE = False
 class CrazyFlieWrapper(Thread):
     def __init__(self, uri, log_list, sampling_period, time0, filename, logger):
         Thread.__init__(self)
+        
         self.uri = uri
         self.logger = logger
         self.period = sampling_period
         self.data_log = np.array([])
         self.data_logging_en = False
         self.log_list = log_list
-        self.scf = SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache'))
-        self.mc = StableMotionCommander(self.scf, default_height = 0.5, log_filename=filename, time0 = time0)
-        self.sd = StepDetector()
         self.is_connected = False
         self.is_running = False
         self.t0 = time0
         self.filename = filename
         self.current_log = dict([])
+
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+        # Instantiate Crazyflie interface
+        self.scf = SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache'))
+        # Instantiate motion commander
+        self.mc = StableMotionCommander(self.scf, default_height = 0.5, log_filename=filename, time0 = time0)
+        # Instantiate custom step detector
+        self.sd = StepDetector()
 
     def run(self):
         self.is_running = True
@@ -110,25 +118,24 @@ class CrazyFlieWrapper(Thread):
        
         if self.data_logging_en:    
             timestamp = round(1000 * (datetime.now() - self.t0).total_seconds(), 3)
-            print(timestamp-timestamp_cf)
             for i in range(len(names)):
                 self.current_log[names[i]] = out[0, i]
                 if self.logger.state == "FLY":
-                    self.log(timestamp, names[i], out[0, i])
+                    self.log(timestamp, timestamp_cf, names[i], out[0, i])
                     if names[i] == "range.zrange":
-                        slope = self.sd.update_z_range(timestamp, out[0,i])
-                        self.log(timestamp, "range.zslope", slope)
+                        slope = self.sd.update_z_range(timestamp_cf, out[0,i])
+                        self.log(timestamp, timestamp_cf, "range.zslope", slope)
                     if names[i] == "gyro.z":
-                        slope = self.sd.update_z_gyro(timestamp, out[0,i])
-                        self.log(timestamp, "gyro.zslope", slope)
+                        slope = self.sd.update_z_gyro(timestamp_cf, out[0,i])
+                        self.log(timestamp, timestamp_cf, "gyro.zslope", slope)
                     if names[i] == "acc.z":
-                        slope = self.sd.update_z_acc(timestamp, out[0,i])
-                        self.log(timestamp, "acc.zslope", slope)
+                        slope = self.sd.update_z_acc(timestamp_cf, out[0,i])
+                        self.log(timestamp, timestamp_cf, "acc.zslope", slope)
                     
                     z_offset, z_slope = self.sd.get_offset()
                     #self.mc.set_z_offset(z_offset)
-                    self.log(timestamp, "zslope", z_slope)
-                    self.log(timestamp, "z_offset", z_offset)
+                    self.log(timestamp, timestamp_cf, "zslope", z_slope)
+                    self.log(timestamp, timestamp_cf, "z_offset", z_offset)
                 
     def _connection_failed(self, link_uri, msg):
         print('[CFW] Connection to %s failed: %s' % (link_uri, msg))
@@ -153,8 +160,8 @@ class CrazyFlieWrapper(Thread):
         # scf.cf.extpos.send_extpose(x, y, z, qx, qy, qz, qw)
         self.scf.cf.extpos.send_extpos(x, y, z)
 
-    def log(self, timestamp, id_var, value):
-        data_row = np.array([timestamp, id_var, value]).reshape(1, -1)
+    def log(self, timestamp, timestamp_cf, id_var, value):
+        data_row = np.array([timestamp, timestamp_cf, id_var, value]).reshape(1, -1)
         if self.data_log.shape[0] == 0:
             self.data_log = data_row
         else:

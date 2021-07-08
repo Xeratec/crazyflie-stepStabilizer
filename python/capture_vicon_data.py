@@ -3,8 +3,10 @@ import os
 sys.path.append("../extern/pyvicon/")
 
 import json
+import logging
 import keyboard
 import time
+import signal
 import simpleaudio as sa
 
 from datetime import datetime
@@ -17,9 +19,12 @@ from stepStabilizer.vicon_wrapper import ViconWrapper
 
 import cflib
 
+logging.basicConfig(level=logging.DEBUG)
+
 class Logger(Thread):
     def __init__(self, filename, log_config_vicon, log_config_crazyflie, log_period_vicon=20, log_period_crazyflie=100):
         Thread.__init__(self)
+
         self.zero_time = datetime.now()
         self.log_config_vicon = log_config_vicon
         self.log_config_crazyflie = log_config_crazyflie
@@ -28,6 +33,8 @@ class Logger(Thread):
         self.mc = None
         self.vicon = None
         self.state = "TAKEOFF"
+
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
        
         cflib.crtp.init_drivers(enable_debug_driver=False)
         drones = cflib.crtp.scan_interfaces()
@@ -41,9 +48,9 @@ class Logger(Thread):
         if log_config_vicon is not None:
             self.vicon = ViconWrapper(ip="192.168.10.1", period=log_period_vicon, subjects=log_config_vicon, time0=self.zero_time, filename=filename)
         if log_config_crazyflie is not None:
-            print("Started")
             self.cf = CrazyFlieWrapper("radio://0/80/2M", log_list=log_config_crazyflie, sampling_period=log_period_crazyflie, time0=self.zero_time, filename=filename, logger = self)
-            
+        
+        # Start threads
         if log_config_crazyflie is not None:
             self.cf.start()
         if log_config_vicon is not None:
@@ -74,7 +81,7 @@ class Logger(Thread):
                 time.sleep(3)
 
                 print('[LOG] Moving forward')
-                #self.cf.mc.forward(0.5, velocity=0.1)
+                self.cf.mc.forward(1, velocity=0.1)
                 time.sleep(1)
                 # self.state = "LAND"
 
@@ -101,7 +108,7 @@ if __name__ == '__main__':
     log_config_vicon = None
 
     # Variables to log from CF
-    log_config_crazyflie = ["stateEstimate.z", "acc.z", "stateEstimate.vz", "posCtl.targetZ", "range.zrange"]
+    log_config_crazyflie = ["stateEstimate.z", "acc.z", "stateEstimate.vz", "posCtl.targetZ", "range.zrange", "stepstabilizer.TOFslope", "stepstabilizer.ACCZslope"]
 
     ## run function in the background
     logger = Logger(filename=os.path.join("logs", sys.argv[1]+"_"), log_config_vicon=log_config_vicon, log_config_crazyflie=log_config_crazyflie)
@@ -115,7 +122,7 @@ if __name__ == '__main__':
     
     # Wait for start of flight
     while(logger.is_running != True):
-            pass
+        pass
 
     time.sleep(0.1)
 
