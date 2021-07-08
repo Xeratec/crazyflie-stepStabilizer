@@ -67,9 +67,9 @@ typedef enum {
 
 
 // TOF Data buffer for linear regression (edge detection)
-buffered_linear_regression_t tof_buffer;
-uint32_t tof_time_buffer[NUM_TOF_EDGE_DETECT];
-uint32_t tof_data_buffer[NUM_TOF_EDGE_DETECT];
+buffered_linear_regression_float_t tof_buffer;
+float tof_time_buffer[NUM_TOF_EDGE_DETECT];
+float tof_data_buffer[NUM_TOF_EDGE_DETECT];
 
 // accelerometer Data buffer for linear regression (edge detection)
 buffered_linear_regression_float_t acc_buffer;
@@ -90,7 +90,7 @@ void appMain()
   DEBUG_PRINT("Starting Application\n");
 
   // initialize the buffers
-  buffered_linear_regression_init( &tof_buffer, tof_time_buffer, tof_data_buffer, NUM_TOF_EDGE_DETECT);
+  buffered_linear_regression_init_float( &tof_buffer, tof_time_buffer, tof_data_buffer, NUM_TOF_EDGE_DETECT);
   buffered_linear_regression_init_float( &acc_buffer, acc_time_buffer, acc_data_buffer, NUM_ACC_EDGE_DETECT);
 
   // initialize the queue
@@ -109,19 +109,25 @@ void appMain()
     {
       // collect data
       uint32_t new_time = T2M(xTaskGetTickCount());
-      uint32_t tof_new_data = logGetUint(idTOF);
+      //float tof_new_data = logGetUint(idTOF);
+      float tof_new_data = tofData.distance;
       float acc_new_data = logGetFloat(idAcc_z);
 
-      DEBUG_PRINT("New data: TOF=%lu, ACC=%f\n", tof_new_data, (double) acc_new_data);
-
-      buffered_linear_regression_add_new_data( &tof_buffer, new_time, tof_new_data);
+      buffered_linear_regression_add_new_float_data( &tof_buffer, new_time, tof_new_data);
       buffered_linear_regression_add_new_float_data( &acc_buffer, new_time, acc_new_data);
-      buffered_linear_regression_result_t tof_reg_res = buffered_linear_regression_calculate_fit(&tof_buffer);
+      buffered_linear_regression_result_t tof_reg_res = buffered_linear_regression_calculate_float_fit(&tof_buffer);
       buffered_linear_regression_result_t acc_reg_res = buffered_linear_regression_calculate_float_fit(&acc_buffer);
 
-      // prevent unused warnings
+      // store the slopes into an array to use them as log parameters
       slopes[SLOPE_TOF] = tof_reg_res.a;
       slopes[SLOPE_ACC_Z] = acc_reg_res.a;
+
+      DEBUG_PRINT("%lu,%f,%f,%f,%f\n", 
+                      new_time,
+                      (double) tof_new_data, 
+                      (double) acc_new_data, 
+                      (double) slopes[SLOPE_TOF], 
+                      (double) slopes[SLOPE_ACC_Z]);
 
       // do the magic with the step detection and estimation
       // TODO
@@ -130,8 +136,6 @@ void appMain()
       // Note: Even though it is called TOF data, the value actually encodes the estimated down range
       // of the drone relative to the liftoff point and not the current distance the drone has to the floor
       estimatorEnqueueTOF(&tofData);
-      
-      DEBUG_PRINT("TOF slope: %f, ACC slope: %f\n", (double) slopes[SLOPE_TOF], (double) slopes[SLOPE_ACC_Z]);
     }
     else 
     { 
@@ -142,7 +146,7 @@ void appMain()
 
 void stepStabilizerEnqueueTOF(tofMeasurement_t *tofData)
 {
-  xQueueOverwrite( tofUnfilteredDataQueue, &tofData );
+  xQueueOverwrite( tofUnfilteredDataQueue, tofData );
 }
 
 LOG_GROUP_START(stepstabilizer)

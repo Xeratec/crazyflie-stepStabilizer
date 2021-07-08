@@ -79,7 +79,8 @@ void buffered_linear_regression_add_new_float_data(buffered_linear_regression_fl
     hBuffer->buffer_idx++;
     if( hBuffer->buffer_idx >= hBuffer->buffer_size) hBuffer->buffer_idx = 0;
 
-    if ( ++hBuffer->new_data_counter > 20)
+    // to prevent a pile-up of rounding errors, recalculate trough the whole array every so often
+    if ( ++hBuffer->new_data_counter > 2000)
     {
         // recalculate all
         hBuffer->sum_x = hBuffer->sum_y = hBuffer->sum_xy = hBuffer->sum_x2 = 0;
@@ -95,7 +96,6 @@ void buffered_linear_regression_add_new_float_data(buffered_linear_regression_fl
             hBuffer->sum_xy += x * y;
             hBuffer->sum_x2 += x * x;
         }
-        DEBUG_PRINT("RECALCULATED!\n");
     }
     else
     {
@@ -129,8 +129,8 @@ buffered_linear_regression_result_t buffered_linear_regression_calculate_float_f
     float denom = (hBuffer->buffer_size * hBuffer->sum_x2 - hBuffer->sum_x * hBuffer->sum_x);
 
     // calculate the linear regression fit ( y = a * x + b )
-    res.a = (hBuffer->sum_x  * hBuffer->sum_y + hBuffer->buffer_size * hBuffer->sum_xy) / denom;
-    res.b = (hBuffer->sum_x2 * hBuffer->sum_y - hBuffer->sum_x       * hBuffer->sum_xy) / denom;
+    res.a = (-hBuffer->sum_x  * hBuffer->sum_y + hBuffer->buffer_size * hBuffer->sum_xy) / denom;
+    res.b = ( hBuffer->sum_x2 * hBuffer->sum_y - hBuffer->sum_x       * hBuffer->sum_xy) / denom;
 
     return res;
 }
