@@ -1,10 +1,11 @@
 import collections
 import math
 import numpy as np
+import logging
 
 from scipy.stats import linregress
 
-VERBOSE = False
+logger = logging.getLogger(__name__)
 
 class StepDetector():
     def __init__(self, num_points=8):
@@ -36,8 +37,8 @@ class StepDetector():
         # if self.step_detector < -5000 and self.z_offset < 0:
         #     self.z_offset = 0
 
-        if VERBOSE:
-            print(np.array(self.z_range_timestamps), np.array(self.z_range_data), np.array(self.z_gyro_timestamps), np.array(self.z_gyro_data))
+        
+        logger.debug(np.array(self.z_range_timestamps), np.array(self.z_range_data), np.array(self.z_gyro_timestamps), np.array(self.z_gyro_data))
 
         return self.z_offset, self.step_detector
     

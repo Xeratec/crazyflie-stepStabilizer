@@ -1,5 +1,6 @@
 import math
 import time
+import logging
 
 import numpy as np
 
@@ -12,8 +13,7 @@ from threading import Thread
 from cflib.positioning.motion_commander import MotionCommander
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 
-VERBOSE = False
-LOG = True
+logger = logging.getLogger(__name__)
 
 class StableMotionCommander(MotionCommander):
     """The stable motion commander"""
@@ -94,9 +94,8 @@ class _StableSetPointThread(Thread):
 
         :return:
         """
-        if LOG:
-            print("[SMC] Saved logo to", self.filename)
-            np.savetxt(self.filename + "cf_SMC.csv", self._hover_setpoint_log, fmt='%s', delimiter=',')
+        logger.info("Saved logo to %s", self.filename)
+        np.savetxt(self.filename + "cf_SMC.csv", self._hover_setpoint_log, fmt='%s', delimiter=',')
         self._queue.put(self.TERMINATE_EVENT)
         self.join()
 
@@ -141,8 +140,7 @@ class _StableSetPointThread(Thread):
 
     def _update_z_in_setpoint(self):
         z_setpoint = max(0, self._current_z() + self._z_offset)
-        if LOG:
-            self._log( (datetime.now()-self.t0 ).total_seconds(), "z_setpoint", z_setpoint)
+        self._log( (datetime.now()-self.t0 ).total_seconds(), "z_setpoint", z_setpoint)
             
         self._hover_setpoint[self.ABS_Z_INDEX] = z_setpoint
         
