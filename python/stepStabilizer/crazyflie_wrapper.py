@@ -38,7 +38,7 @@ class CrazyFlieWrapper(Thread):
         # Instantiate Crazyflie interface
         self.scf = SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache'))
         # Instantiate motion commander
-        self.mc = StableMotionCommander(self.scf, default_height = 0.5, log_filename=filename, time0 = time0)
+        self.mc = StableMotionCommander(self.scf, default_height = 0.5, time0 = time0)
         # Instantiate custom step detector
         self.sd = StepDetector()
 
@@ -121,6 +121,7 @@ class CrazyFlieWrapper(Thread):
             for i in range(len(names)):
                 self.current_log[names[i]] = out[0, i]
                 if self.data_logger.state == "FLY":
+                # if True:
                     self.log(timestamp, timestamp_cf, names[i], out[0, i])
                     if names[i] == "range.zrange":
                         slope = self.sd.update_z_range(timestamp_cf, out[0,i])
@@ -133,7 +134,7 @@ class CrazyFlieWrapper(Thread):
                         self.log(timestamp, timestamp_cf, "acc.zslope", slope)
                     
                     z_offset, z_slope = self.sd.get_offset()
-                    #self.mc.set_z_offset(z_offset)
+                    self.mc.set_z_offset(z_offset)
                     self.log(timestamp, timestamp_cf, "zslope", z_slope)
                     self.log(timestamp, timestamp_cf, "z_offset", z_offset)
                 

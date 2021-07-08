@@ -81,14 +81,14 @@ class Logger(Thread):
             try:
                 logger.info('Taking off!')
                 self.cf.mc.take_off(0.5)
-                time.sleep(0.5)
+                time.sleep(2)
                 self.state = "FLY"
-                time.sleep(3)
+                time.sleep(2)
 
                 logger.info('Moving forward')
                 self.cf.mc.forward(1, velocity=0.1)
                 time.sleep(1)
-                # self.state = "LAND"
+                self.state = "LAND"
 
                 self.cf.mc.turn_left(180)
 
@@ -131,17 +131,15 @@ if __name__ == '__main__':
         time.sleep(0.1)
         pass
 
-    time.sleep(0.1)
-
     while data_logger.cf.mc._is_flying:
         time.sleep(0.1)
         if keyboard.is_pressed('q'):
             logger.warning("Aborting...")
             data_logger.stop()
-            time.sleep(1)
+            time.sleep(10)
             break
 
-    time.sleep(10)
+    time.sleep(.5)
     
     if log_config_vicon is not None:
         data_logger.vicon.logging_enabled(0)

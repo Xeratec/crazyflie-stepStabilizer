@@ -112,7 +112,7 @@ void appMain()
       uint32_t tof_new_data = logGetUint(idTOF);
       float acc_new_data = logGetFloat(idAcc_z);
 
-      DEBUG_PRINT("New data: TOF=%lu, ACC=%f\n", tof_new_data, (double) acc_new_data);
+      // DEBUG_PRINT("New data: TOF=%lu, ACC=%f\n", tof_new_data, (double) acc_new_data);
 
       buffered_linear_regression_add_new_data( &tof_buffer, new_time, tof_new_data);
       buffered_linear_regression_add_new_float_data( &acc_buffer, new_time, acc_new_data);
@@ -131,7 +131,7 @@ void appMain()
       // of the drone relative to the liftoff point and not the current distance the drone has to the floor
       estimatorEnqueueTOF(&tofData);
       
-      DEBUG_PRINT("TOF slope: %f, ACC slope: %f\n", (double) slopes[SLOPE_TOF], (double) slopes[SLOPE_ACC_Z]);
+      // DEBUG_PRINT("TOF slope: %f, ACC slope: %f\n", (double) slopes[SLOPE_TOF], (double) slopes[SLOPE_ACC_Z]);
     }
     else 
     { 
@@ -142,7 +142,7 @@ void appMain()
 
 void stepStabilizerEnqueueTOF(tofMeasurement_t *tofData)
 {
-  xQueueOverwrite( tofUnfilteredDataQueue, &tofData );
+  xQueueOverwrite( tofUnfilteredDataQueue, tofData );
 }
 
 LOG_GROUP_START(stepstabilizer)
