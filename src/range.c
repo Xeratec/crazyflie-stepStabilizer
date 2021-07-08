@@ -28,9 +28,13 @@
 
 #include "log.h"
 
+#include "FreeRTOS.h"
+#include "queue.h"
+
 #include "range.h"
 #include "stabilizer_types.h"
 #include "estimator.h"
+#include "app_stepStabilizer_main.h"
 
 static uint16_t ranges[RANGE_T_END] = {0,};
 
@@ -53,7 +57,9 @@ void rangeEnqueueDownRangeInEstimator(float distance, float stdDev, uint32_t tim
   tofData.timestamp = timeStamp;
   tofData.distance = distance;
   tofData.stdDev = stdDev;
-  estimatorEnqueueTOF(&tofData);
+
+  // enque the TOF measurement in the application queue instead of the estimator queue
+  stepStabilizerEnqueueTOF(&tofData);
 }
 
 /**

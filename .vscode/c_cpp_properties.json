@@ -74,7 +74,6 @@
             "name": "CF2 MacOS",
             "includePath": [
                 "${workspaceFolder}/src/inc/**",
-                "${workspaceFolder}/inc/**",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/**",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/Core/Include",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/DSP/Include",
