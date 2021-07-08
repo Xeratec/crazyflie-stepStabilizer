@@ -14,7 +14,7 @@ from cflib.positioning.motion_commander import MotionCommander
 URI = 'radio://0/80/2M'
 
 # Only output errors from the logging framework
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.DEBUG)
 
 
 if __name__ == '__main__':

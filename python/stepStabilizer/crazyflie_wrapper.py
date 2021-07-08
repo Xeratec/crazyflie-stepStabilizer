@@ -2,6 +2,7 @@ import math
 import sys
 import signal
 import time
+import logging
 import numpy as np
 from datetime import datetime
 from threading import Thread
@@ -14,15 +15,14 @@ from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from .stable_motion_commander import StableMotionCommander
 from .step_detecition import StepDetector
 
-VERBOSE = False
-
+logger = logging.getLogger(__name__)
 
 class CrazyFlieWrapper(Thread):
-    def __init__(self, uri, log_list, sampling_period, time0, filename, logger):
+    def __init__(self, uri, log_list, sampling_period, time0, filename, data_logger):
         Thread.__init__(self)
         
         self.uri = uri
-        self.logger = logger
+        self.data_logger = data_logger
         self.period = sampling_period
         self.data_log = np.array([])
         self.data_logging_en = False
@@ -38,7 +38,7 @@ class CrazyFlieWrapper(Thread):
         # Instantiate Crazyflie interface
         self.scf = SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache'))
         # Instantiate motion commander
-        self.mc = StableMotionCommander(self.scf, default_height = 0.5, log_filename=filename, time0 = time0)
+        self.mc = StableMotionCommander(self.scf, default_height = 0.5, time0 = time0)
         # Instantiate custom step detector
         self.sd = StepDetector()
 
@@ -55,14 +55,14 @@ class CrazyFlieWrapper(Thread):
         self.scf.cf.connection_failed.add_callback(self._connection_failed)
         self.scf.cf.connection_lost.add_callback(self._connection_lost)
 
-        print('[CFW] Connecting to %s' % self.uri)
+        logger.info('Connecting to %s', self.uri)
 
         # Try to connect to the Crazyflie
         self.scf.cf.open_link(self.uri)
 
 
     def _connected(self, link_uri):
-        print('[CFW] Connected to %s' % link_uri)
+        logger.info('Connected to %s' % link_uri)
         self.config()
         self.is_connected = True
         if len(self.log_list) > 0:
@@ -70,13 +70,13 @@ class CrazyFlieWrapper(Thread):
 
     def logging(self):
         N = len(self.log_list)
-        print("[CFW]", self.log_list)
+        logger.info("Logging %s", str(self.log_list))
         logs_nr = math.ceil(N / 6.0)
 
         logs = []
         for i in range(logs_nr):
             logs.append(LogConfig(name="log" + str(i), period_in_ms=self.period))
-        print("[CFW] Logs added: ", logs_nr)
+        logger.info("Logs added: %d", logs_nr)
 
         for i in range(N):
             logs[i//6].add_variable(self.log_list[i], 'float')
@@ -90,10 +90,10 @@ class CrazyFlieWrapper(Thread):
                 # Start the logging
                 current_log.start()
         except KeyError as e:
-            print('[CFW] Could not start log configuration,'
+            logger.exception('Could not start log configuration,'
                   '{} not found in TOC'.format(str(e)))
         except AttributeError:
-            print('[CFW] Could not add Stabilizer log config, bad configuration.')
+            logger.exception('Could not add Stabilizer log config, bad configuration.')
 
     def config(self):
         time.sleep(0.2)
@@ -105,9 +105,9 @@ class CrazyFlieWrapper(Thread):
         
         # Set PID Controller
         self.scf.cf.param.set_value('commander.enHighLevel', '0')
-        print("[CFW] CF configured!")
+        logger.info("CF configured!")
         
-        print("[CFW] Reset estimator")
+        logger.info("Reset estimator")
         self.scf.cf.param.set_value('kalman.resetEstimation', '1')
         time.sleep(0.1)
         self.scf.cf.param.set_value('kalman.resetEstimation', '0')
@@ -120,7 +120,8 @@ class CrazyFlieWrapper(Thread):
             timestamp = round(1000 * (datetime.now() - self.t0).total_seconds(), 3)
             for i in range(len(names)):
                 self.current_log[names[i]] = out[0, i]
-                if self.logger.state == "FLY":
+                if self.data_logger.state == "FLY":
+                # if True:
                     self.log(timestamp, timestamp_cf, names[i], out[0, i])
                     if names[i] == "range.zrange":
                         slope = self.sd.update_z_range(timestamp_cf, out[0,i])
@@ -133,19 +134,19 @@ class CrazyFlieWrapper(Thread):
                         self.log(timestamp, timestamp_cf, "acc.zslope", slope)
                     
                     z_offset, z_slope = self.sd.get_offset()
-                    #self.mc.set_z_offset(z_offset)
+                    self.mc.set_z_offset(z_offset)
                     self.log(timestamp, timestamp_cf, "zslope", z_slope)
                     self.log(timestamp, timestamp_cf, "z_offset", z_offset)
                 
     def _connection_failed(self, link_uri, msg):
-        print('[CFW] Connection to %s failed: %s' % (link_uri, msg))
+        logger.info('Connection to %s failed: %s' % (link_uri, msg))
         self.is_connected = False
 
     def _connection_lost(self, link_uri, msg):
-        print('[CFW] Connection to %s lost: %s' % (link_uri, msg))
+        logger.info('Connection to %s lost: %s' % (link_uri, msg))
 
     def _disconnected(self, link_uri):
-        print('[CFW] Disconnected from %s' % link_uri)
+        logger.info('Disconnected from %s' % link_uri)
         self.is_connected = False
 
     def send_extpose(self, cf, pos, quat):
