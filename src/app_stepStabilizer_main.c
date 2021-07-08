@@ -34,13 +34,19 @@
 #include "app.h"
 
 #include "FreeRTOS.h"
+#include "queue.h"
+#include "static_mem.h"
 #include "task.h"
+
+#include "estimator.h"
+#include "stabilizer_types.h"
 
 #include "debug.h"
 
 #include "log.h"
 #include "param.h"
 
+#include "app_stepStabilizer_main.h"
 #include "buffered_linear_regression.h"
 
 #define DEBUG_MODULE "INTERNLOGPARAM"
@@ -70,6 +76,10 @@ buffered_linear_regression_t acc_buffer;
 uint32_t acc_time_buffer[NUM_ACC_EDGE_DETECT];
 uint32_t acc_data_buffer[NUM_ACC_EDGE_DETECT];
 
+// Measurements of TOF from laser sensor
+static xQueueHandle tofUnfilteredDataQueue;
+STATIC_MEM_QUEUE_ALLOC(tofUnfilteredDataQueue, 1, sizeof(tofMeasurement_t));
+
 // slopes from linear regression
 float slopes[2];
 
@@ -77,59 +87,60 @@ float slopes[2];
 
 void appMain()
 {
-  /*
-  DEBUG_PRINT("This is the App layer example of the internal log param api...\n");
-  logVarId_t idYaw = logGetVarId("stateEstimate", "yaw");
-  float yaw = 0.0f;
-
-  paramVarId_t idEstimator = paramGetVarId("stabilizer", "estimator");
-  uint8_t estimator_type = 0;
-  */
+  DEBUG_PRINT("Starting Application\n");
 
   // initialize the buffers
   buffered_linear_regression_init( &tof_buffer, tof_time_buffer, tof_data_buffer, NUM_TOF_EDGE_DETECT);
   buffered_linear_regression_init( &acc_buffer, acc_time_buffer, acc_data_buffer, NUM_ACC_EDGE_DETECT);
 
+  // initialize the queue
+  tofUnfilteredDataQueue = STATIC_MEM_QUEUE_CREATE(tofUnfilteredDataQueue);
+  xQueueReset(tofUnfilteredDataQueue);
+
   logVarId_t idTOF = logGetVarId("range", "zrange");
   logVarId_t idAcc_z = logGetVarId("acc", "z");
 
+  tofMeasurement_t tofData;
+
   while(1)
   {
-    vTaskDelay(M2T(STABILIZER_UPDATE_RATE));
+    // wait for a new TOF measurement
+    if( xQueueReceive(tofUnfilteredDataQueue, &tofData, M2T(100)) == pdTRUE )
+    {
+      // collect data
+      uint32_t new_time = T2M(xTaskGetTickCount());
+      uint32_t tof_new_data = logGetUint(idTOF);
+      uint32_t acc_new_data = logGetUint(idAcc_z);
 
-    // collect data
-    uint32_t new_time = T2M(xTaskGetTickCount());
-    uint32_t tof_new_data = logGetUint(idTOF);
-    uint32_t acc_new_data = logGetUint(idAcc_z);
+      buffered_linear_regression_add_new_data( &tof_buffer, new_time, tof_new_data);
+      buffered_linear_regression_add_new_data( &acc_buffer, new_time, acc_new_data);
+      buffered_linear_regression_result_t tof_reg_res = buffered_linear_regression_calculate_fit(&tof_buffer);
+      buffered_linear_regression_result_t acc_reg_res = buffered_linear_regression_calculate_fit(&acc_buffer);
 
-    buffered_linear_regression_add_new_data( &tof_buffer, new_time, tof_new_data);
-    buffered_linear_regression_add_new_data( &acc_buffer, new_time, acc_new_data);
-    buffered_linear_regression_result_t tof_reg_res = buffered_linear_regression_calculate_fit(&tof_buffer);
-    buffered_linear_regression_result_t acc_reg_res = buffered_linear_regression_calculate_fit(&acc_buffer);
+      // prevent unused warnings
+      slopes[SLOPE_TOF] = tof_reg_res.a;
+      slopes[SLOPE_ACC_Z] = acc_reg_res.a;
 
-    // prevent unused warnings
-    slopes[SLOPE_TOF] = tof_reg_res.a;
-    slopes[SLOPE_ACC_Z] = acc_reg_res.a;
-    
-    DEBUG_PRINT("TOF slope: %f, ACC slope: %f\n", (double) slopes[SLOPE_TOF], (double) slopes[SLOPE_ACC_Z]);
-    /*
-    vTaskDelay(M2T(2000));
+      // do the magic with the step detection and estimation
+      // TODO
 
-    // Get the logging data
-    yaw = logGetFloat(idYaw);
-    DEBUG_PRINT("Yaw is now: %f deg\n", (double)yaw);
-
-    // Get parameter value
-    estimator_type = paramGetInt(idEstimator);
-    DEBUG_PRINT("Estimator type is now: %d deg\n", estimator_type);
-
-    // Set a parameter value 
-    //  Note, this will influence the flight quality if you change estimator
-    uint8_t new_value = 2;
-    paramSetInt(idEstimator, new_value);
-    */
-    
+      // enqueue another height estimation for the controller
+      // Note: Even though it is called TOF data, the value actually encodes the estimated down range
+      // of the drone relative to the liftoff point and not the current distance the drone has to the floor
+      estimatorEnqueueTOF(&tofData);
+      
+      DEBUG_PRINT("TOF slope: %f, ACC slope: %f\n", (double) slopes[SLOPE_TOF], (double) slopes[SLOPE_ACC_Z]);
+    }
+    else 
+    { 
+      DEBUG_PRINT("TOF Timeout!\n");
+    }
   }
+}
+
+void stepStabilizerEnqueueTOF(tofMeasurement_t *tofData)
+{
+  xQueueOverwrite( tofUnfilteredDataQueue, &tofData );
 }
 
 LOG_GROUP_START(stepstabilizer)

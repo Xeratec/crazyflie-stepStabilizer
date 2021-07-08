@@ -28,6 +28,9 @@
 
 #include "log.h"
 
+#include "FreeRTOS.h"
+#include "queue.h"
+
 #include "range.h"
 #include "stabilizer_types.h"
 #include "estimator.h"
@@ -54,7 +57,11 @@ bool rangeEnqueueDownRangeInEstimator(float distance, float stdDev, uint32_t tim
   tofData.distance = distance;
   tofData.stdDev = stdDev;
 
-  return estimatorEnqueueTOF(&tofData);
+  // enque the TOF measurement in the application queue instead of the estimator queue
+  stepStabilizerEnqueueTOF(&tofData);
+  return true;
+
+  //return estimatorEnqueueTOF(&tofData);
 }
 
 LOG_GROUP_START(range)
