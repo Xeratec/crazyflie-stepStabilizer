@@ -72,9 +72,9 @@ uint32_t tof_time_buffer[NUM_TOF_EDGE_DETECT];
 uint32_t tof_data_buffer[NUM_TOF_EDGE_DETECT];
 
 // accelerometer Data buffer for linear regression (edge detection)
-buffered_linear_regression_t acc_buffer;
-uint32_t acc_time_buffer[NUM_ACC_EDGE_DETECT];
-uint32_t acc_data_buffer[NUM_ACC_EDGE_DETECT];
+buffered_linear_regression_float_t acc_buffer;
+float acc_time_buffer[NUM_ACC_EDGE_DETECT];
+float acc_data_buffer[NUM_ACC_EDGE_DETECT];
 
 // Measurements of TOF from laser sensor
 static xQueueHandle tofUnfilteredDataQueue;
@@ -91,7 +91,7 @@ void appMain()
 
   // initialize the buffers
   buffered_linear_regression_init( &tof_buffer, tof_time_buffer, tof_data_buffer, NUM_TOF_EDGE_DETECT);
-  buffered_linear_regression_init( &acc_buffer, acc_time_buffer, acc_data_buffer, NUM_ACC_EDGE_DETECT);
+  buffered_linear_regression_init_float( &acc_buffer, acc_time_buffer, acc_data_buffer, NUM_ACC_EDGE_DETECT);
 
   // initialize the queue
   tofUnfilteredDataQueue = STATIC_MEM_QUEUE_CREATE(tofUnfilteredDataQueue);
@@ -110,12 +110,14 @@ void appMain()
       // collect data
       uint32_t new_time = T2M(xTaskGetTickCount());
       uint32_t tof_new_data = logGetUint(idTOF);
-      uint32_t acc_new_data = logGetUint(idAcc_z);
+      float acc_new_data = logGetFloat(idAcc_z);
+
+      DEBUG_PRINT("New data: TOF=%lu, ACC=%f\n", tof_new_data, (double) acc_new_data);
 
       buffered_linear_regression_add_new_data( &tof_buffer, new_time, tof_new_data);
-      buffered_linear_regression_add_new_data( &acc_buffer, new_time, acc_new_data);
+      buffered_linear_regression_add_new_float_data( &acc_buffer, new_time, acc_new_data);
       buffered_linear_regression_result_t tof_reg_res = buffered_linear_regression_calculate_fit(&tof_buffer);
-      buffered_linear_regression_result_t acc_reg_res = buffered_linear_regression_calculate_fit(&acc_buffer);
+      buffered_linear_regression_result_t acc_reg_res = buffered_linear_regression_calculate_float_fit(&acc_buffer);
 
       // prevent unused warnings
       slopes[SLOPE_TOF] = tof_reg_res.a;
@@ -146,4 +148,4 @@ void stepStabilizerEnqueueTOF(tofMeasurement_t *tofData)
 LOG_GROUP_START(stepstabilizer)
 LOG_ADD(LOG_FLOAT, TOFslope, &slopes[SLOPE_TOF])
 LOG_ADD(LOG_FLOAT, ACCZslope, &slopes[SLOPE_ACC_Z])
-LOG_GROUP_STOP(range)
+LOG_GROUP_STOP(stepstabilizer)

@@ -130,6 +130,11 @@ endif
 VPATH += $(CRAZYFLIE_BASE)/src/init $(CRAZYFLIE_BASE)/src/hal/src $(CRAZYFLIE_BASE)/src/modules/src $(CRAZYFLIE_BASE)/src/modules/src/lighthouse $(CRAZYFLIE_BASE)/src/modules/src/kalman_core $(CRAZYFLIE_BASE)/src/utils/src $(CRAZYFLIE_BASE)/src/drivers/bosch/src $(CRAZYFLIE_BASE)/src/drivers/src $(CRAZYFLIE_BASE)/src/platform
 VPATH += $(CRAZYFLIE_BASE)/src/utils/src/kve
 
+# Exclude the Excluded Files
+EXCLUDES = $(CRAZYFLIE_BASE)/src/modules/src/range.c
+
+VPATH := $(filter-out $(EXCLUDES), $(VPATH))
+
 ############### Source files configuration ################
 
 # Init
