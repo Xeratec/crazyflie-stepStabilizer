@@ -32,7 +32,7 @@ class StepDetector():
 
     def get_offset(self): 
         if self.z_acc_slope != 0:
-            self.step_detector = self.z_range_slope/(abs(self.z_acc_slope)+20)
+            self.step_detector = self.z_range_slope/(abs(self.z_acc_slope)+1)
         else:
             self.step_detector = 0
         

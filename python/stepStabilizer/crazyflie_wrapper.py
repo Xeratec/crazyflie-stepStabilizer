@@ -37,6 +37,10 @@ class CrazyFlieWrapper(Thread):
         self.current_log = dict([])
         self.devs = []
 
+        self.counter = 0
+        self.first_data = True
+        self.cf_time_offset = 0
+
         cflib.crtp.init_drivers(enable_debug_driver=False)
 
         self.jr = JoystickReader(do_device_discovery=False)
@@ -97,9 +101,10 @@ class CrazyFlieWrapper(Thread):
 
         # Try to connect to the Crazyflie
         self.scf.cf.open_link(self.uri)
+        # self.jr.set_assisted_control(self.jr.ASSISTED_CONTROL_HEIGHTHOLD)
+        self.jr.set_assisted_control(self.jr.ASSISTED_CONTROL_HOVER)
+        
         self.jr.input_updated.add_callback(self.scf.cf.commander.send_setpoint)
-        self.jr.heighthold_input_updated.add_callback(self.scf.cf.commander.send_hover_setpoint)
-
 
         self.jr.input_updated.add_callback(self.scf.cf.commander.send_setpoint)
         self.jr.assisted_input_updated.add_callback(self.scf.cf.commander.send_velocity_world_setpoint)
@@ -163,6 +168,16 @@ class CrazyFlieWrapper(Thread):
        
         if self.data_logging_en:    
             timestamp = round(1000 * (datetime.now() - self.t0).total_seconds(), 3)
+            self.counter += 1
+
+            if self.first_data:
+                self.cf_time_offset = abs(timestamp_cf-timestamp)
+                self.first_data = False
+            if self.counter > (1000/self.period):
+                if abs(timestamp_cf-timestamp)-self.cf_time_offset  > 10: 
+                    logger.warning("Offset {:2.3f} ms".format(abs(timestamp_cf-timestamp)-self.cf_time_offset ))
+                self.counter = 0
+
             for i in range(len(names)):
                 self.current_log[names[i]] = out[0, i]
                 # if self.data_logger.state == "FLY":
@@ -178,10 +193,10 @@ class CrazyFlieWrapper(Thread):
                         slope = self.sd.update_z_acc(timestamp_cf, out[0,i])
                         self.log(timestamp, timestamp_cf, "acc.zslope", slope)
                     
-                    z_offset, z_slope = self.sd.get_offset()
-                    # self.mc.set_z_offset(z_offset)
-                    self.log(timestamp, timestamp_cf, "zslope", z_slope)
-                    self.log(timestamp, timestamp_cf, "z_offset", z_offset)
+                    # z_offset, z_slope = self.sd.get_offset()
+                    # # self.mc.set_z_offset(z_offset)
+                    # self.log(timestamp, timestamp_cf, "zslope", z_slope)
+                    # self.log(timestamp, timestamp_cf, "z_offset", z_offset)
                 
     def _connection_failed(self, link_uri, msg):
         logger.info('Connection to %s failed: %s' % (link_uri, msg))
@@ -216,10 +231,13 @@ class CrazyFlieWrapper(Thread):
             self.data_log = np.append(self.data_log, data_row, axis=0)
 
     def save_log(self):
-        self.is_running = False
         np.savetxt(self.filename + "cf.csv", self.data_log, fmt='%s', delimiter=',')
         logger.info("Log Saved!")
+        self.is_running = False
         self.scf.cf.close_link()
+
+    def save_log_noExit(self): 
+        np.savetxt(self.filename + "cf.csv", self.data_log, fmt='%s', delimiter=',')
 
     def logging_enabled(self, val):
         if val == 0:

@@ -87,9 +87,12 @@ class ViconWrapper(Thread):
             self.data_log = np.append(self.data_log, data_row, axis=0)
 
     def save_log(self):
-        self.is_running = False
         np.savetxt(self.filename + "vicon.csv", self.data_log, fmt='%s', delimiter=',')
+        self.is_running = False
         logger.info("Log Saved!")
+
+    def save_log_noExit(self): 
+        np.savetxt(self.filename + "cf.csv", self.data_log, fmt='%s', delimiter=',')
     
     def logging_enabled(self, val):
         if val == 0:

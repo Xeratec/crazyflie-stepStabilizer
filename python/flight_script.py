@@ -30,7 +30,7 @@ coloredlogs.install()
 logger = logging.getLogger(__name__)
 
 class Logger(Thread):
-    def __init__(self, filename, log_config_vicon, log_config_crazyflie, uri="radio://0/80/2M",  log_period_vicon=20, log_period_crazyflie=100):
+    def __init__(self, filename, log_config_vicon, log_config_crazyflie, uri="radio://0/80/2M",  log_period_vicon=50, log_period_crazyflie=50):
         Thread.__init__(self)
         self.name = "Logger"
         self.zero_time = datetime.now()
@@ -85,8 +85,9 @@ class Logger(Thread):
         else:
             while self.is_running:
                 time.sleep(0.1)
+                # self.cf.save_log_noExit()
+                # self.vicon.save_log_noExit()
 
-            logging.warning("Exit")
             self.cf.logging_enabled(0)
             self.vicon.logging_enabled(0)
             self.cf.save_log()
@@ -153,10 +154,15 @@ def main():
                 while data_logger.isAlive:
                     try:
                         data_logger.join(1)
+                        time.sleep(0.1)
                     except KeyboardInterrupt:
                         # Ctrl-C handling and send kill to threads
                         data_logger.is_running = False
-                        time.sleep(1)
+                        logging.warning("Exit")
+                        while data_logger.cf.is_running:
+                            time.sleep(0.1)
+                        while data_logger.vicon.is_running:
+                            time.sleep(0.1)
                         os.kill(os.getpid(), signal.SIGTERM)
                 
                    
