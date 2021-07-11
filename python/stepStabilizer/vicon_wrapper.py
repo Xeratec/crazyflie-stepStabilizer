@@ -1,4 +1,5 @@
 import sys
+import logging
 import time
 import math
 import numpy as np
@@ -12,6 +13,7 @@ from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 
+logger = logging.getLogger(__name__)
 
 class ViconWrapper(Thread):
     def __init__(self, ip, period, subjects, time0, filename):
@@ -36,9 +38,9 @@ class ViconWrapper(Thread):
 
     def connect(self):
         self.vicon = PyVicon()
-        print("[VIC] SDK version : {}".format(self.vicon.__version__))
-        print("[VIC]", self.vicon.connect(self.ip))
-        print("[VIC] Vicon connection status : {}".format(self.vicon.is_connected()))
+        logger.info("SDK version : {}".format(self.vicon.__version__))
+        logger.info("{}".format(self.vicon.connect(self.ip)))
+        logger.info("Vicon connection status : {}".format(self.vicon.is_connected()))
         self.vicon.set_stream_mode(StreamMode.ServerPush)
         self.vicon.enable_segment_data()
         self.vicon.enable_marker_data()
@@ -86,7 +88,7 @@ class ViconWrapper(Thread):
     def save_log(self):
         self.is_running = False
         np.savetxt(self.filename + "vicon.csv", self.data_log, fmt='%s', delimiter=',')
-        print("[VIC] Log Saved!")
+        logger.info("Log Saved!")
         # if self.is_running: 
         #     time.sleep(0.01)
         #     self.join()

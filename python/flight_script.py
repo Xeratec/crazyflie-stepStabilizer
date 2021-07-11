@@ -108,12 +108,11 @@ class Logger(Thread):
                 self.cf.mc.land()
                 time.sleep(1)
 
-if __name__ == '__main__':
-    #log_config_vicon = ["Drone", "Box"]
-    log_config_vicon = None
+def main():
 
     # Variables to log from CF
-    log_config_crazyflie = ["stateEstimate.z", "acc.z", "stateEstimate.vz", "posCtl.targetZ", "range.zrange", "stepstabilizer.TOFslope", "stepstabilizer.ACCZslope"]
+    # log_config_crazyflie = ["stateEstimate.z", "acc.z", "stateEstimate.vz", "posCtl.targetZ", "range.zrange", "stepstabilizer.TOFslope", "stepstabilizer.ACCZslope"]
+    log_config_crazyflie = ["stateEstimate.z", "stateEstimate.vz", "posCtl.targetZ", "acc.z", "range.zrange"]
 
     ## run function in the background
     data_logger = Logger(filename=os.path.join("logs", sys.argv[1]+"_"), log_config_vicon=log_config_vicon, log_config_crazyflie=log_config_crazyflie)
@@ -148,3 +147,7 @@ if __name__ == '__main__':
     if log_config_crazyflie is not None and data_logger.cf is not None:
         data_logger.cf.logging_enabled(0)     
         data_logger.cf.save_log()
+
+
+if __name__ == '__main__':
+    main()

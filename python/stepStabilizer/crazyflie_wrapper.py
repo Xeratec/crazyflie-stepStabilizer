@@ -120,8 +120,8 @@ class CrazyFlieWrapper(Thread):
             timestamp = round(1000 * (datetime.now() - self.t0).total_seconds(), 3)
             for i in range(len(names)):
                 self.current_log[names[i]] = out[0, i]
-                if self.data_logger.state == "FLY":
-                # if True:
+                # if self.data_logger.state == "FLY":
+                if True:
                     self.log(timestamp, timestamp_cf, names[i], out[0, i])
                     if names[i] == "range.zrange":
                         slope = self.sd.update_z_range(timestamp_cf, out[0,i])
@@ -141,9 +141,11 @@ class CrazyFlieWrapper(Thread):
     def _connection_failed(self, link_uri, msg):
         logger.info('Connection to %s failed: %s' % (link_uri, msg))
         self.is_connected = False
+        sys.exit(-1)
 
     def _connection_lost(self, link_uri, msg):
         logger.info('Connection to %s lost: %s' % (link_uri, msg))
+        sys.exit(-1)
 
     def _disconnected(self, link_uri):
         logger.info('Disconnected from %s' % link_uri)
