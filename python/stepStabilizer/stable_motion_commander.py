@@ -27,6 +27,7 @@ class StableMotionCommander(MotionCommander):
         :param crazyflie: a Crazyflie or SyncCrazyflie instance
         :param default_height: the default height to fly at
         """
+        self.name = "StableMotionCommandersa"
         MotionCommander.__init__(self, crazyflie, default_height)
         self.t0 = time0
 

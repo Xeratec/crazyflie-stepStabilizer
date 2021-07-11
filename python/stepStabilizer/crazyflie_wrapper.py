@@ -1,5 +1,6 @@
 import math
 import sys
+import os
 import signal
 import time
 import logging
@@ -8,9 +9,11 @@ from datetime import datetime
 from threading import Thread
 
 import cflib.crtp
+import cfclient.utils
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
+from cfclient.utils.input import JoystickReader
 
 from .stable_motion_commander import StableMotionCommander
 from .step_detecition import StepDetector
@@ -20,7 +23,7 @@ logger = logging.getLogger(__name__)
 class CrazyFlieWrapper(Thread):
     def __init__(self, uri, log_list, sampling_period, time0, filename, data_logger):
         Thread.__init__(self)
-        
+        self.name = "CrazyFlieWrapper"
         self.uri = uri
         self.data_logger = data_logger
         self.period = sampling_period
@@ -32,8 +35,11 @@ class CrazyFlieWrapper(Thread):
         self.t0 = time0
         self.filename = filename
         self.current_log = dict([])
+        self.devs = []
 
-        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        cflib.crtp.init_drivers(enable_debug_driver=False)
+
+        self.jr = JoystickReader(do_device_discovery=False)
 
         # Instantiate Crazyflie interface
         self.scf = SyncCrazyflie(uri, cf=Crazyflie(rw_cache='./cache'))
@@ -42,11 +48,32 @@ class CrazyFlieWrapper(Thread):
         # Instantiate custom step detector
         self.sd = StepDetector()
 
+        for d in self.jr.available_devices():
+            self.devs.append(d.name)
+
+    def setup_controller(self, input_config, input_device=0):
+        """Set up the device reader"""
+        # Set up the joystick reader
+        self.devs = self.jr.available_devices()
+        logger.info("Will use [{}] for input with [{}] config".format(self.devs[input_device].name, input_config))
+        self.jr.start_input(self.devs[input_device].name)
+        self.jr.set_input_map(self.devs[input_device].name, input_config)
+
+    def controller_connected(self):
+        """ Return True if a controller is connected"""
+        return True if (len(self.jr.available_devices()) > 0) else False
+    
+    def list_controllers(self):
+        """List the available controllers and input mapping"""
+        print("\nAvailable controllers:")
+        for i, dev in enumerate(self.devs):
+            print(" - Controller #{}: {}".format(i, dev))
+        print("\nAvailable input mapping:")
+        for map in os.listdir(cfclient.config_path + '/input'):
+            print(" - " + map.split(".json")[0])
+
     def run(self):
-        self.is_running = True
         self.connect_tocf()
-        while self.is_connected == False:
-            time.sleep(0.01)
 
     def connect_tocf(self):
         # Connect some callbacks from the Crazyflie API
@@ -55,11 +82,29 @@ class CrazyFlieWrapper(Thread):
         self.scf.cf.connection_failed.add_callback(self._connection_failed)
         self.scf.cf.connection_lost.add_callback(self._connection_lost)
 
+        self.jr.set_alt_hold_available(True)
+
+
+        self.jr.assisted_control_updated.add_callback(
+            cb=(
+                lambda enabled: (
+                    self.scf.cf.param.set_value("flightmode.althold", enabled)
+                )
+            )
+        )
+
         logger.info('Connecting to %s', self.uri)
 
         # Try to connect to the Crazyflie
         self.scf.cf.open_link(self.uri)
+        self.jr.input_updated.add_callback(self.scf.cf.commander.send_setpoint)
+        self.jr.heighthold_input_updated.add_callback(self.scf.cf.commander.send_hover_setpoint)
 
+
+        self.jr.input_updated.add_callback(self.scf.cf.commander.send_setpoint)
+        self.jr.assisted_input_updated.add_callback(self.scf.cf.commander.send_velocity_world_setpoint)
+        self.jr.heighthold_input_updated.add_callback(self.scf.cf.commander.send_zdistance_setpoint)
+        self.jr.hover_input_updated.add_callback(self.scf.cf.commander.send_hover_setpoint)
 
     def _connected(self, link_uri):
         logger.info('Connected to %s' % link_uri)
@@ -104,7 +149,7 @@ class CrazyFlieWrapper(Thread):
         # self.scf.cfparam.set_value('stabilizer.controller', '2')
         
         # Set PID Controller
-        self.scf.cf.param.set_value('commander.enHighLevel', '0')
+        # self.scf.cf.param.set_value('commander.enHighLevel', '1')
         logger.info("CF configured!")
         
         logger.info("Reset estimator")
@@ -134,7 +179,7 @@ class CrazyFlieWrapper(Thread):
                         self.log(timestamp, timestamp_cf, "acc.zslope", slope)
                     
                     z_offset, z_slope = self.sd.get_offset()
-                    self.mc.set_z_offset(z_offset)
+                    # self.mc.set_z_offset(z_offset)
                     self.log(timestamp, timestamp_cf, "zslope", z_slope)
                     self.log(timestamp, timestamp_cf, "z_offset", z_offset)
                 
@@ -171,7 +216,9 @@ class CrazyFlieWrapper(Thread):
             self.data_log = np.append(self.data_log, data_row, axis=0)
 
     def save_log(self):
+        self.is_running = False
         np.savetxt(self.filename + "cf.csv", self.data_log, fmt='%s', delimiter=',')
+        logger.info("Log Saved!")
         self.scf.cf.close_link()
 
     def logging_enabled(self, val):

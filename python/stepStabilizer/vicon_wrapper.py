@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 class ViconWrapper(Thread):
     def __init__(self, ip, period, subjects, time0, filename):
         Thread.__init__(self)
+        self.name = "ViconWrapper"
         self.ip = ip
         self.period = period
         self.vicon = []
@@ -77,7 +78,7 @@ class ViconWrapper(Thread):
                         #         self.send_data([pos, quat])
 
             time.sleep(self.period / 1000.0)
-
+            
     def log(self, timestamp, id_var, value):
         data_row = np.array([timestamp, id_var, value]).reshape(1, -1)
         if self.data_log.shape[0] == 0:
@@ -89,10 +90,7 @@ class ViconWrapper(Thread):
         self.is_running = False
         np.savetxt(self.filename + "vicon.csv", self.data_log, fmt='%s', delimiter=',')
         logger.info("Log Saved!")
-        # if self.is_running: 
-        #     time.sleep(0.01)
-        #     self.join()
-
+    
     def logging_enabled(self, val):
         if val == 0:
             self.data_logging_en = False
