@@ -1,7 +1,6 @@
-cfclient.egg==info
-scipy==1.6.0
 numpy==1.19.5
 cflib.egg==info
-coloredlogs==15.0.1
+cfclient.egg==info
+scipy==1.6.0
 cfclient==2021.6
 cflib==0.1.16

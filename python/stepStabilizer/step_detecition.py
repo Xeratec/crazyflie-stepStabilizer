@@ -38,7 +38,7 @@ class StepDetector():
         
         if self.step_detector < -self.step_agressivity and self.z_offset >= 0 and (time.time() - self.step_time) >= self.step_delay:
             self.step_time = time.time() 
-            self.z_offset = -0.10
+            self.z_offset = -0.30
             logger.warning("Step Detected: %f (Offset: %f)", self.step_detector, self.z_offset)
 
         if self.step_detector > self.step_agressivity and self.z_offset < 0 and (time.time() - self.step_time) >= self.step_delay:

@@ -67,7 +67,7 @@ if __name__ == '__main__':
             console_log = console.text.replace("ESTKALMAN: State out of bounds, resetting", "")
             log_name = "" if len(sys.argv) <= 1 else sys.argv[1]
             script_dir = os.path.dirname(os.path.abspath(__file__))
-            target = os.path.join(script_dir, os.path.join("console_logs", "test" + log_name + ".csv"))
+            target = os.path.join(script_dir, os.path.join("logs", "console_logs", "test" + log_name + ".csv"))
             f = open(target, "w")
             f.write(console.text)
             f.close()

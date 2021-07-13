@@ -34,7 +34,7 @@ class ViconWrapper(Thread):
         self.filename = filename
 
     def run(self):
-        sys.path.append("../extern/pyvicon/")
+        sys.path.append("../extern/pyvicons/")
         self.connect()
         self.loop()
 
