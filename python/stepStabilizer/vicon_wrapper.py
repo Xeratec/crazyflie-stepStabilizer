@@ -17,8 +17,9 @@ logger = logging.getLogger(__name__)
 try:
     sys.path.append("../extern/pyvicon/")
     from pyvicon.pyvicon import PyVicon, StreamMode, Direction, Result
-except ImportError:
+except Exception:
     logger.exception("No PyVicon available!")
+    pass
 
 
 class ViconWrapper(Thread):

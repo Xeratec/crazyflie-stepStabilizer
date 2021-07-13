@@ -1,4 +1,7 @@
-import pyvicon_module
+try:
+    import pyvicon_module
+except Exception:
+    pass
 
 from enum import Enum
 import numpy as np

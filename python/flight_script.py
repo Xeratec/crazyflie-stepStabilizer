@@ -128,7 +128,7 @@ def main():
         data_logger.cf.setup_controller(input_config=args.input, input_device=args.controller)
         data_logger.start()
 
-        while data_logger.isAlive:
+        while data_logger.is_alive():
             try:
                 data_logger.join(0.1)
                 time.sleep(0.1)
@@ -148,27 +148,30 @@ def main():
                 while data_logger.cf.mc._is_flying:
                     data_logger.cf.mc.land()
                     time.sleep(1)
-                os.kill(os.getpid(), signal.SIGTERM)
+                os.kill(os.getpid(), signal.SIGKILL)
         return
     
     # Use flight script
     data_logger.set_flight_script(flight_script)
     data_logger.start()
-    while data_logger.isAlive:
+    while data_logger.is_alive():
         try:
             data_logger.join(0.1)
             time.sleep(0.1)
         except KeyboardInterrupt:
             # Ctrl-C handling and send kill to threads
-            logging.warning("Exiting")
+            logging.warning("Exiting...")
             data_logger.is_running = False
 
             # Save landing
-            while data_logger.cf.mc._is_flying:
+            current_time = time.time()
+            while (time.time()-current_time < 5):
+                if (not data_logger.cf.mc._is_flying):
+                    break
                 data_logger.cf.mc.land()
                 time.sleep(1)
             # Wait for all logs to be saved
-            os.kill(os.getpid(), signal.SIGTERM)
+            os.kill(os.getpid(), signal.SIGKILL)
 
 
 if __name__ == '__main__':
