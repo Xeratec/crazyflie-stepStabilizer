@@ -91,7 +91,7 @@ STATIC_MEM_QUEUE_ALLOC(tofUnfilteredDataQueue, 1, sizeof(tofMeasurement_t));
 float slopes[2];
 
 // algorithm that is to be used for step detection and stabilization
-stepStabilizerAlgorithm_t step_detection_approach = SSALGORITHM_ESTIMATION;
+stepStabilizerAlgorithm_t step_detection_approach = SSALGORITHM_NONE;
 
 // data used for the estimation algorithm
 stepStabilizer_estimation_t stepStabilizer_estimation;

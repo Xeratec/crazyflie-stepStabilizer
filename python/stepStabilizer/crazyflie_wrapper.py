@@ -195,16 +195,16 @@ class CrazyFlieWrapper(Thread):
 
          # No step detection algorithm
         if (self.algorithm == 0):
-            pass
+            self.scf.cf.param.set_value('stepstabilizer_type.type', '0')
         # Proof of concept python step detection algorithm
         if (self.algorithm == 1):
-            pass
+            self.scf.cf.param.set_value('stepstabilizer_type.type', '0')
         # Computational online step detection algorithm
         if (self.algorithm == 2):
-            pass
+            self.scf.cf.param.set_value('stepstabilizer_type.type', '1')
         # Machine learning online step detection algorithm
         if (self.algorithm == 3):
-            pass
+            self.scf.cf.param.set_value('stepstabilizer_type.type', '2')
 
         logger.info("CF configured!")
 
