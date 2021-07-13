@@ -1,179 +1,22 @@
 import logging
 import sys
-sys.path.append("../extern/pyvicon/")
-
 import os
-import json
 import argparse
 import coloredlogs
-import keyboard
 import signal
 import time
-import simpleaudio as sa
+import textwrap
+
+# Custom user libraries
+from stepStabilizer import MainCommunication
+
+# Crazyflie libraries
 import cflib
-
-from datetime import datetime
-import threading
-from threading import Thread
-from numpy import arctan2, arcsin
-
-from stepStabilizer.stable_motion_commander import StableMotionCommander
-from stepStabilizer.crazyflie_wrapper import CrazyFlieWrapper
-from stepStabilizer.vicon_wrapper import ViconWrapper
-
-
 import cfclient
 from cfclient.utils.config import Config
 from cfclient.utils.config_manager import ConfigManager
 
-coloredlogs.install()
 logger = logging.getLogger(__name__)
-
-class Logger(Thread):
-    def __init__(self, filename, log_config_vicon, log_config_crazyflie, uri="radio://0/80/2M",  log_period_vicon=50, log_period_crazyflie=50):
-        Thread.__init__(self)
-        self.name = "Logger"
-        self.zero_time = datetime.now()
-        self.log_config_vicon = log_config_vicon
-        self.log_config_crazyflie = log_config_crazyflie
-        self.log_period_vicon = log_period_vicon
-        self.log_period_crazyflie = log_period_crazyflie
-        self.filename = filename 
-        self.flight_script = None
-        self.uri = uri
-        self.is_running = False
-        self.cf = None
-        self.mc = None
-        self.vicon = None
-        self.state = "TAKEOFF"
-
-        # Create vicon and crazyflie object
-        self.vicon = ViconWrapper(ip="192.168.10.1", period=self.log_period_vicon, subjects=self.log_config_vicon, time0=self.zero_time, filename=self.filename)
-        self.cf = CrazyFlieWrapper(self.uri, log_list=self.log_config_crazyflie, sampling_period=self.log_period_crazyflie, time0=self.zero_time, filename=self.filename, data_logger = self)
-
-    def set_flight_script(self, script):
-        self.flight_script = script
-
-    def run(self):
-         # Start threads
-        if self.log_config_crazyflie is not None:
-            self.cf.start()
-        if self.log_config_vicon is not None:
-            self.vicon.start()
-
-        while(self.cf.is_connected != True):
-            time.sleep(0.1)
-            pass
-    
-        logger.info("Logging starting...")
-
-        self.is_running = True
-
-        self.vicon.logging_enabled(1)
-        self.cf.logging_enabled(1)
-
-        if self.flight_script:
-            try:
-                self.flight_script(self.cf.mc, self.state)
-                self.cf.logging_enabled(0)
-                self.vicon.logging_enabled(0)
-                self.cf.save_log()
-                self.vicon.save_log()
-            except Exception:
-                logger.exception("Illegal command")
-                pass
-        else:
-            while self.is_running:
-                time.sleep(0.1)
-                # self.cf.save_log_noExit()
-                # self.vicon.save_log_noExit()
-
-            self.cf.logging_enabled(0)
-            self.vicon.logging_enabled(0)
-            self.cf.save_log()
-            self.vicon.save_log()
-
-def main():
-    parser = argparse.ArgumentParser(prog="flight_script")
-    parser.add_argument("log_path", action="store", type=str,
-                        default="./logs/test",
-                        help="Path to save log file, "
-                             "defaults to ./logs/test")
-    parser.add_argument("--sv", action="extend", nargs="+", type=str, dest="log_config_vicon",
-                        default=None,
-                        help="Vicon log entry to save, "
-                             "defaults to None")
-    parser.add_argument("--sc", action="extend", nargs="+", type=str, dest="log_config_crazyflie",
-                        default=["stateEstimate.z", "stateEstimate.vz", "posCtl.targetZ", "acc.z", "range.zrange"],
-                        help="Crazyflie log entry to save, "
-                             "defaults to stateEstimate.z, stateEstimate.vz, posCtl.targetZ, acc.z, range.zrange")
-    parser.add_argument("-u", "--uri", action="store", dest="uri", type=str,
-                        default="radio://0/80/2M",
-                        help="URI to use for connection to the Crazyradio"
-                             " dongle, defaults to radio://0/80/2M")
-    parser.add_argument("-i", "--input", action="store", dest="input",
-                        type=str, default="PS3_Mode_1",
-                        help="Input mapping to use for the controller,"
-                             "defaults to PS3_Mode_1")
-    parser.add_argument("-d", "--debug", action="store_true", dest="debug",
-                        help="Enable debug output")
-    parser.add_argument("-c", "--controller", action="store", type=int,
-                        dest="controller", default=-1,
-                        help="Use controller with specified id,"
-                             " id defaults to 0")
-    parser.add_argument("--controllers", action="store_true",
-                        dest="list_controllers",
-                        help="Only display available controllers and exit")
-    parser.add_argument("--stepStabilizer", action="store_true",
-                        dest="enableStepStabilizer",
-                        help="Enable python step stabilizer algorithm")
-
-    (args, unused) = parser.parse_known_args()
-
-    if args.debug:
-        logging.basicConfig(level=logging.INFO)
-        logger.setLevel(logging.DEBUG)
-        logger.info(args)
-    else:
-        logging.basicConfig(level=logging.WARN)
-        logger.setLevel(logging.WARN)
-
-    ## run function in the background
-    data_logger = Logger(filename=args.log_path, 
-        log_config_vicon=args.log_config_vicon, 
-        log_config_crazyflie=args.log_config_crazyflie,
-        uri=args.uri)
-    
-    if (args.list_controllers):
-        data_logger.cf.list_controllers()
-    else:
-        if args.controller != -1:
-            if data_logger.cf.controller_connected():
-                data_logger.cf.setup_controller(input_config=args.input, input_device=args.controller)
-                data_logger.start()
-                while data_logger.isAlive:
-                    try:
-                        data_logger.join(1)
-                        time.sleep(0.1)
-                    except KeyboardInterrupt:
-                        # Ctrl-C handling and send kill to threads
-                        data_logger.is_running = False
-                        logging.warning("Exit")
-                        while data_logger.cf.is_running:
-                            time.sleep(0.1)
-                        while data_logger.vicon.is_running:
-                            time.sleep(0.1)
-                        os.kill(os.getpid(), signal.SIGTERM)
-                
-                   
-            else:
-                print("No input-device connected, using flight script!")
-        else:
-            data_logger.set_flight_script(flight_script)
-            data_logger.start()
-
-        
-       
             
 def flight_script(cf_commander, state):
     logger.info('Taking off!')
@@ -192,6 +35,140 @@ def flight_script(cf_commander, state):
     state = "LAND"
     cf_commander.land()
     time.sleep(1)
+
+
+def main():
+    # Console argument parser
+    parser = argparse.ArgumentParser(
+        prog="flight_script", 
+        description='Logging and control scirpt for crazyflie with automatic step detection and correction. Authors: Philip Wiese, Luca Rufer',
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+
+    parser.add_argument("log_path", action="store", nargs='?', type=str,
+                        default="./logs/test",
+                        help="Path to save log file. \r\ndefault: './logs/test'")
+
+    # Save log data from drone and crazyflie
+    parser_log = parser.add_argument_group("Data Logging")
+    parser_log.add_argument("--sv", action="extend", nargs="+", type=str, dest="log_config_vicon",
+                        default=None,
+                        help="Vicon log entry to save. \r\ndefault: None")
+    parser_log.add_argument("--sc", action="extend", nargs="+", type=str, dest="log_config_crazyflie",
+                        default=["stateEstimate.z", "stateEstimate.vz", "posCtl.targetZ", "acc.z", "range.zrange"],
+                        help="Crazyflie log entry to save. \r\n"
+                             "default: 'stateEstimate.z' 'stateEstimate.vz' 'posCtl.targetZ' 'acc.z' 'range.zrange'")
+
+    # Drone configuration
+    parser_drone = parser.add_argument_group("Crazyflie Configuration")
+    parser_drone.add_argument("-u", "--uri", action="store", dest="uri", type=str,
+                        default="radio://0/80/2M",
+                        help="URI to use for connection to the Crazyradio dongle. \r\n"
+                             "default: radio://0/80/2M")
+    parser_drone.add_argument("-i", action="store", dest="input",
+                        type=str, default="PS3_Mode_1",
+                        help="Input mapping to use for the controller. \r\n"
+                             "default: PS3_Mode_1")
+    parser_drone.add_argument("-c", action="store", type=int,
+                        dest="controller", default=-1,
+                        help="Use controller with specified id.\r\n"
+                            "default: Use flight script")
+    parser_drone.add_argument("--controllers", action="store_true",
+                        dest="list_controllers",
+                        help="Only display available controllers and exit")
+
+    # Algorithm configuration 
+    parser_algorithm = parser.add_argument_group("Algorithm Configuration")                   
+    parser_algorithm.add_argument('--stepStabilizer',
+                    type=int,
+                    choices=range(0, 4),
+                    default= 0,
+                    help=textwrap.dedent('''\
+                        Select step stabilizer algorithm.
+                        \t0: None
+                        \t1: Proof of Concept Python Algorithm
+                        \t2: Filter Online Algorithm 
+                        \t3: Machine Learning Online Algorithm
+                        default: 0''')
+    )
+    # Misc configuration
+    parser.add_argument('--verbose', '-v', action='count', default=0,
+                    help="Verbosity (-vv for higher verbosity)")
+
+
+    args, _ = parser.parse_known_args()
+
+    if args.verbose > 1:
+        coloredlogs.install(level='DEBUG')
+    elif args.verbose > 0:
+        coloredlogs.install(level='INFO')
+        logger.debug(args)
+    else:
+        coloredlogs.install(level='WARN')
+
+    logger.debug(args)
+
+    ## Create main communication thread
+    data_logger = MainCommunication(
+        filename=args.log_path, 
+        algorithm=args.stepStabilizer,
+        log_config_vicon=args.log_config_vicon, 
+        log_config_crazyflie=args.log_config_crazyflie,
+        uri=args.uri)
+    
+    if (args.list_controllers):
+        data_logger.cf.list_controllers()
+        return
+
+    if args.controller != -1:
+        if not data_logger.cf.controller_connected():
+            print("No input-device connected!")
+            return
+
+        data_logger.cf.setup_controller(input_config=args.input, input_device=args.controller)
+        data_logger.start()
+
+        while data_logger.isAlive:
+            try:
+                data_logger.join(0.1)
+                time.sleep(0.1)
+            except KeyboardInterrupt:
+                # Ctrl-C handling and send kill to threads
+                logging.warning("Exiting...")
+                data_logger.is_running = False
+
+                # Wait for all logs to be saved
+                while data_logger.cf.is_running:
+                    time.sleep(0.1)
+                if (data_logger.vicon is not None):
+                    while data_logger.vicon.is_running:
+                        time.sleep(0.1)
+
+                # Save landing
+                while data_logger.cf.mc._is_flying:
+                    data_logger.cf.mc.land()
+                    time.sleep(1)
+                os.kill(os.getpid(), signal.SIGTERM)
+        return
+    
+    # Use flight script
+    data_logger.set_flight_script(flight_script)
+    data_logger.start()
+    while data_logger.isAlive:
+        try:
+            data_logger.join(0.1)
+            time.sleep(0.1)
+        except KeyboardInterrupt:
+            # Ctrl-C handling and send kill to threads
+            logging.warning("Exiting")
+            data_logger.is_running = False
+
+            # Save landing
+            while data_logger.cf.mc._is_flying:
+                data_logger.cf.mc.land()
+                time.sleep(1)
+            # Wait for all logs to be saved
+            os.kill(os.getpid(), signal.SIGTERM)
 
 
 if __name__ == '__main__':

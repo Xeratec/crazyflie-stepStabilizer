@@ -9,7 +9,7 @@ from scipy.stats import linregress
 logger = logging.getLogger(__name__)
 
 class StepDetector():
-    def __init__(self, num_points=8, step_delay = 2, step_agressivity = 1.5):
+    def __init__(self, num_points=8, step_delay = 2, step_agressivity = 40):
         # Number of datapoints to consider
         self.num_points = num_points
 
@@ -38,13 +38,14 @@ class StepDetector():
         
         if self.step_detector < -self.step_agressivity and self.z_offset >= 0 and (time.time() - self.step_time) >= self.step_delay:
             self.step_time = time.time() 
-            logger.warning("Step Detected: %f", self.step_detector)
-            self.z_offset = -0.11
+            self.z_offset = -0.10
+            logger.warning("Step Detected: %f (Offset: %f)", self.step_detector, self.z_offset)
 
         if self.step_detector > self.step_agressivity and self.z_offset < 0 and (time.time() - self.step_time) >= self.step_delay:
             self.step_time = time.time() 
-            logger.warning("Step Detected: %f", self.step_detector)
             self.z_offset = 0
+            logger.warning("Step Detected: %f (Offset: %f)", self.step_detector, self.z_offset)
+
         
         logger.debug(np.array(self.z_range_timestamps), np.array(self.z_range_data), np.array(self.z_gyro_timestamps), np.array(self.z_gyro_data))
 

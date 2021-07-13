@@ -2,13 +2,11 @@ import math
 import time
 import logging
 
-import numpy as np
 
 from datetime import datetime
 from queue import Empty
 from queue import Queue
 from threading import Thread
-
 
 from cflib.positioning.motion_commander import MotionCommander
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
@@ -27,10 +25,9 @@ class StableMotionCommander(MotionCommander):
         :param crazyflie: a Crazyflie or SyncCrazyflie instance
         :param default_height: the default height to fly at
         """
-        self.name = "StableMotionCommandersa"
+        self.name = "StableMotionCommander"
         MotionCommander.__init__(self, crazyflie, default_height)
         self.t0 = time0
-
 
     def take_off(self, height=None, velocity=VELOCITY):
         """
