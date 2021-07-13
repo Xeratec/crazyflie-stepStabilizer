@@ -93,6 +93,7 @@ float slopes[2];
 // algorithm that is to be used for step detection and stabilization
 stepStabilizerAlgorithm_t step_detection_approach = SSALGORITHM_NONE;
 uint8_t step_detection_reset = 0;
+uint8_t step_detection_print_data = 0;
 
 // data used for the estimation algorithm
 stepStabilizer_estimation_t stepStabilizer_estimation;
@@ -159,7 +160,9 @@ void appMain()
           break;
       }
 
-      DEBUG_PRINT("%lu,%f,%f,%f,%f,%f,%f,%f,%lu,%f,%lu,%f,%lu,%lu,%lu\n",
+      if ( step_detection_print_data )
+      {
+        DEBUG_PRINT("%lu,%f,%f,%f,%f,%f,%f,%f,%lu,%f,%lu,%f,%lu,%lu,%lu\n",
                       new_time,
                       (double) tof_new_data, 
                       (double) acc_new_data,
@@ -175,6 +178,7 @@ void appMain()
                       stepStabilizer_estimation.step_duration,
                       stepStabilizer_estimation.buffer_idx,
                       stepStabilizer_estimation.last_valid_v_tof_index);
+      } 
 
       // enqueue another height estimation for the controller
       // Note: Even though it is called TOF data, the value actually encodes the estimated down range
@@ -337,6 +341,7 @@ LOG_GROUP_STOP(sse)
 PARAM_GROUP_START(stepstabilizer)
 PARAM_ADD(PARAM_UINT8, type, &step_detection_approach)
 PARAM_ADD(PARAM_UINT8, reset, &step_detection_reset)
+PARAM_ADD(PARAM_UINT8, print_data, &step_detection_print_data)
 PARAM_GROUP_STOP(stepstabilizer)
 
 PARAM_GROUP_START(ssep)
