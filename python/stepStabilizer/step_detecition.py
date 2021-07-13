@@ -47,8 +47,6 @@ class StepDetector():
             logger.warning("Step Detected: %f (Offset: %f)", self.step_detector, self.z_offset)
 
         
-        logger.debug(np.array(self.z_range_timestamps), np.array(self.z_range_data), np.array(self.z_gyro_timestamps), np.array(self.z_gyro_data))
-
         return self.z_offset, self.step_detector
     
     def update_z_range(self, timestamp, value):     

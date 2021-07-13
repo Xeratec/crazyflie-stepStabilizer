@@ -10,6 +10,9 @@ from threading import Thread
 
 import cflib.crtp
 import cfclient.utils
+
+from cflib.utils.callbacks import Caller
+from cflib.crtp.crtpstack import CRTPPort
 from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
@@ -95,6 +98,8 @@ class CrazyFlieWrapper(Thread):
         self.connect_tocf()
 
     def connect_tocf(self):
+        self.scf.cf.add_port_callback(CRTPPort.CONSOLE, self._print_console)
+        
         # Connect some callbacks from the Crazyflie API
         self.scf.cf.connected.add_callback(self._connected)
         self.scf.cf.disconnected.add_callback(self._disconnected)
@@ -128,7 +133,9 @@ class CrazyFlieWrapper(Thread):
 
                 # self.jr.set_assisted_control(self.jr.ASSISTED_CONTROL_HEIGHTHOLD)
         self.jr.set_assisted_control(self.jr.ASSISTED_CONTROL_HOVER)
-
+    
+    def _print_console(self, packet):
+        logger.warning(packet.data.decode('UTF-8'))
 
     def _adjustHoverSetpoint(self, vy, vx, yawrate, _target_height):
         _target_height += self.sd.get_offset()[0]
@@ -189,22 +196,29 @@ class CrazyFlieWrapper(Thread):
         # Set PID Controller
         self.scf.cf.param.set_value('commander.enHighLevel', '1')
         
-        self.scf.cf.param.set_value('kalman.resetEstimation', '1')
-        time.sleep(0.1)
-        self.scf.cf.param.set_value('kalman.resetEstimation', '0')
+        # Reset estimators
+        self.scf.cf.param.set_value('stepstabilizer.print_data', '0')
 
-         # No step detection algorithm
+        self.scf.cf.param.set_value('stepstabilizer.reset', '1')
+        self.scf.cf.param.set_value('kalman.resetEstimation', '1')
+
+        # No step detection algorithm
         if (self.algorithm == 0):
-            self.scf.cf.param.set_value('stepstabilizer_type.type', '0')
+            self.scf.cf.param.set_value('stepstabilizer.type', '0')
         # Proof of concept python step detection algorithm
         if (self.algorithm == 1):
-            self.scf.cf.param.set_value('stepstabilizer_type.type', '0')
+            self.scf.cf.param.set_value('stepstabilizer.type', '0')
         # Computational online step detection algorithm
         if (self.algorithm == 2):
-            self.scf.cf.param.set_value('stepstabilizer_type.type', '1')
+            self.scf.cf.param.set_value('stepstabilizer.type', '1')
+            # Configure parmeters
+            self.scf.cf.param.set_value('ssep.after_step_cooldown', '5')
+            self.scf.cf.param.set_value('ssep.max_step_duration', '10')
+            self.scf.cf.param.set_value('ssep.step_dv_hist_high', '0.8')
+            self.scf.cf.param.set_value('ssep.step_dv_hist_low', '0.2')
         # Machine learning online step detection algorithm
         if (self.algorithm == 3):
-            self.scf.cf.param.set_value('stepstabilizer_type.type', '2')
+            self.scf.cf.param.set_value('stepstabilizer.type', '2')
 
         logger.info("CF configured!")
 

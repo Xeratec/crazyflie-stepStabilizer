@@ -45,8 +45,6 @@ class MainCommunication(Thread):
         self.zero_time              = datetime.now()
         self.flight_script          = None
 
-        print(self.log_config_crazyflie, self.log_config_vicon)
-
         # States
         self.is_running             = False
         self.state                  = "TAKEOFF"
