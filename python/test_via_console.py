@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
             # move forwards
             print('Moving forward 1m')
-            mc.forward(1, velocity=0.3)
+            mc.forward(1, velocity=.1)
 
             # Wait a bit and then land
             time.sleep(0.5)
