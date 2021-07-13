@@ -92,6 +92,7 @@ float slopes[2];
 
 // algorithm that is to be used for step detection and stabilization
 stepStabilizerAlgorithm_t step_detection_approach = SSALGORITHM_NONE;
+uint8_t step_detection_reset = 0;
 
 // data used for the estimation algorithm
 stepStabilizer_estimation_t stepStabilizer_estimation;
@@ -124,6 +125,13 @@ void appMain()
     // wait for a new TOF measurement
     if( xQueueReceive(tofUnfilteredDataQueue, &tofData, M2T(100)) == pdTRUE )
     {
+      // check for reset
+      if ( step_detection_reset )
+      {
+        stepStabilizer_estimation_init();
+        step_detection_reset = 0;
+      }
+
       // collect data
       uint32_t new_time = T2M(xTaskGetTickCount()); // ms
       //float tof_new_data = logGetUint(idTOF);
@@ -142,9 +150,10 @@ void appMain()
       // do the magic with the step detection and estimation
       switch(step_detection_approach)
       {
+        case SSALGORITHM_NONE:
+          break;
         case SSALGORITHM_MACHINE_LEARNING:
           break;
-
         case SSALGORITHM_ESTIMATION:
           stepStabilizer_estimation_run(&tofData, acc_new_data);
           break;
@@ -325,9 +334,10 @@ LOG_ADD(LOG_UINT32, buffer_idx, &(stepStabilizer_estimation.buffer_idx))
 LOG_ADD(LOG_UINT32, v_ref_idx, &(stepStabilizer_estimation.last_valid_v_tof_index))
 LOG_GROUP_STOP(sse)
 
-PARAM_GROUP_START(stepstabilizer_type)
+PARAM_GROUP_START(stepstabilizer)
 PARAM_ADD(PARAM_UINT8, type, &step_detection_approach)
-PARAM_GROUP_STOP(stepstabilizer_type)
+PARAM_ADD(PARAM_UINT8, reset, &step_detection_reset)
+PARAM_GROUP_STOP(stepstabilizer)
 
 PARAM_GROUP_START(ssep)
 PARAM_ADD(PARAM_UINT32, max_step_duration, &(stepStabilizer_estimation_parameters.max_step_duration))
