@@ -6,7 +6,6 @@ import numpy as np
 from datetime import datetime
 from threading import Thread
 
-from pyvicon.pyvicon import PyVicon, StreamMode, Direction, Result
 
 import cflib.crtp
 from cflib.crazyflie.log import LogConfig
@@ -14,6 +13,13 @@ from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 
 logger = logging.getLogger(__name__)
+
+try:
+    sys.path.append("../extern/pyvicon/")
+    from pyvicon.pyvicon import PyVicon, StreamMode, Direction, Result
+except ImportError:
+    logger.exception("No PyVicon available!")
+
 
 class ViconWrapper(Thread):
     def __init__(self, ip, period, subjects, time0, filename):
@@ -34,7 +40,6 @@ class ViconWrapper(Thread):
         self.filename = filename
 
     def run(self):
-        sys.path.append("../extern/pyvicons/")
         self.connect()
         self.loop()
 
