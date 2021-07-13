@@ -129,6 +129,7 @@ void appMain()
       // check for reset
       if ( step_detection_reset )
       {
+        DEBUG_PRINT("Reset Application State\n");
         stepStabilizer_estimation_init();
         step_detection_reset = 0;
       }
@@ -199,6 +200,9 @@ void stepStabilizerEnqueueTOF(tofMeasurement_t *tofData)
 
 void stepStabilizer_estimation_init()
 {
+  if (stepStabilizer_estimation.acc_z_dt_buffer != NULL) free(stepStabilizer_estimation.acc_z_dt_buffer);
+  if (stepStabilizer_estimation.v_tof_buffer != NULL) free(stepStabilizer_estimation.v_tof_buffer);
+
   stepStabilizer_estimation_parameters = (stepStabilizer_estimation_parameters_t)
   {
     .max_step_duration = 10,
