@@ -79,7 +79,10 @@ CFLAGS += -DCF_MASS=0.032f #// in kg
 # CFLAGS += -DDEBUG_QUEUE_MONITOR
 
 ## Automatically reboot to bootloader before flashing
- CLOAD_CMDS = -w radio://0/81/2M/E7E7E7E7E7
+CLOAD_CMDS = -w radio://0/81/2M/E7E7E7E7E7
+# CLOAD_CMDS = -w radio://0/80/2M/E7E7E7E7E7
+
+# Or Run: python -m cfloader -w radio://0/80/2M/E7E7E7E7E7 flash cf2.bin stm32-fw
 
 ## Set number of anchor in LocoPositioningSystem
 # CFLAGS += -DLOCODECK_NR_OF_ANCHORS=8

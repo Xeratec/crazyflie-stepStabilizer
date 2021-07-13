@@ -7,8 +7,9 @@
 #include "stabilizer_types.h"
 
 typedef enum stepStabilizerAlgorithm_e {
-    SSALGORITHM_MACHINE_LEARNING = 0,
+    SSALGORITHM_NONE= 0,
     SSALGORITHM_ESTIMATION = 1,
+    SSALGORITHM_MACHINE_LEARNING = 2,
 } stepStabilizerAlgorithm_t;
 
 typedef struct stepStabilizer_estimation_s {
