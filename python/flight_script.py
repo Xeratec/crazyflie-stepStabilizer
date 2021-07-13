@@ -19,23 +19,23 @@ from cfclient.utils.config_manager import ConfigManager
 logger = logging.getLogger(__name__)
             
 def flight_script(cf_commander, state):
-    logger.info('Taking off!')
-    state = "TAKEOFF"
-    cf_commander.take_off(0.5)
-    
-    time.sleep(2)
+    try:
+        logger.info('Taking off!')
+        state = "TAKEOFF"
+        cf_commander.take_off(0.4)
+        
+        time.sleep(1)
 
-    logger.info('Moving forward')
-    state = "FLY"
-    time.sleep(2)
-    cf_commander.forward(1, velocity=0.1)
-    time.sleep(1)
+        logger.info('Moving forward')
+        state = "FLY"
+        cf_commander.forward(0.8, velocity=0.4)
+        time.sleep(1)
 
-    logger.info('Landing!')
-    state = "LAND"
-    cf_commander.land()
-    time.sleep(1)
-
+        logger.info('Landing!')
+        state = "LAND"
+        cf_commander.land()
+    except:
+        pass
 
 def main():
     # Console argument parser
@@ -45,16 +45,16 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter
     )
 
-    parser.add_argument("log_path", action="store", nargs='?', type=str,
-                        default="./logs/test",
-                        help="Path to save log file. \r\ndefault: './logs/test'")
-
     # Save log data from drone and crazyflie
     parser_log = parser.add_argument_group("Data Logging")
-    parser_log.add_argument("--sv", action="extend", nargs="+", type=str, dest="log_config_vicon",
-                        default=None,
+    parser_log.add_argument("-l", action="store", nargs='?', type=str,
+                        default = "",
+                        dest = "log_path",
+                        help="Filename for log files. \r\ndefault: ''")
+    parser_log.add_argument("--sv", action="store", nargs="+", type=str, dest="log_config_vicon",
+                        default=['None'],
                         help="Vicon log entry to save. \r\ndefault: None")
-    parser_log.add_argument("--sc", action="extend", nargs="+", type=str, dest="log_config_crazyflie",
+    parser_log.add_argument("--sc", action="store", nargs="+", type=str, dest="log_config_crazyflie",
                         default=["stateEstimate.z", "stateEstimate.vz", "posCtl.targetZ", "acc.z", "range.zrange"],
                         help="Crazyflie log entry to save. \r\n"
                              "default: 'stateEstimate.z' 'stateEstimate.vz' 'posCtl.targetZ' 'acc.z' 'range.zrange'")
@@ -66,9 +66,9 @@ def main():
                         help="URI to use for connection to the Crazyradio dongle. \r\n"
                              "default: radio://0/80/2M")
     parser_drone.add_argument("-i", action="store", dest="input",
-                        type=str, default="PS3_Mode_1",
+                        type=str, default="xbox360_mode1",
                         help="Input mapping to use for the controller. \r\n"
-                             "default: PS3_Mode_1")
+                             "default: xbox360_mode1")
     parser_drone.add_argument("-c", action="store", type=int,
                         dest="controller", default=-1,
                         help="Use controller with specified id.\r\n"
@@ -140,6 +140,7 @@ def main():
                 # Wait for all logs to be saved
                 while data_logger.cf.is_running:
                     time.sleep(0.1)
+
                 if (data_logger.vicon is not None):
                     while data_logger.vicon.is_running:
                         time.sleep(0.1)
@@ -168,9 +169,16 @@ def main():
             while (time.time()-current_time < 5):
                 if (not data_logger.cf.mc._is_flying):
                     break
-                data_logger.cf.mc.land()
+                try:
+                    data_logger.cf.mc.land()
+                except:
+                    break
                 time.sleep(1)
-            # Wait for all logs to be saved
+            
+            data_logger.cf.save_log()
+            if (data_logger.vicon is not None):
+                data_logger.vicon.save_log()
+                
             os.kill(os.getpid(), signal.SIGKILL)
 
 

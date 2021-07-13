@@ -120,7 +120,7 @@ class CrazyFlieWrapper(Thread):
         self.jr.input_updated.add_callback(self.scf.cf.commander.send_setpoint)
         self.jr.assisted_input_updated.add_callback(self.scf.cf.commander.send_velocity_world_setpoint)
         self.jr.heighthold_input_updated.add_callback(self.scf.cf.commander.send_zdistance_setpoint)
-        self.jr.hover_input_updated.add_callback(self.scf.cf.commander.send_hover_setpoint)
+        self.jr.hover_input_updated.add_callback(self._adjustHoverSetpoint)
 
         # Try to connect to the Crazyflie
         logger.info('Connecting to %s', self.uri)
@@ -129,6 +129,12 @@ class CrazyFlieWrapper(Thread):
                 # self.jr.set_assisted_control(self.jr.ASSISTED_CONTROL_HEIGHTHOLD)
         self.jr.set_assisted_control(self.jr.ASSISTED_CONTROL_HOVER)
 
+
+    def _adjustHoverSetpoint(self, vy, vx, yawrate, _target_height):
+        _target_height += self.sd.get_offset()[0]
+        _target_height = max(_target_height, cfclient.utils.input.MIN_TARGET_HEIGHT)
+        _target_height = min(_target_height, cfclient.utils.input.MAX_TARGET_HEIGHT)
+        self.scf.cf.commander.send_hover_setpoint(vy, -vx, yawrate, _target_height)
 
     def _set_available_sensors(self, name, available):
         logger.info("[%s]: %s", name, available)
@@ -142,7 +148,7 @@ class CrazyFlieWrapper(Thread):
         self.is_connected = True
         
         # Start logging
-        if len(self.log_list) > 0:
+        if  len(self.log_list) > 0:
             self.logging()
 
     def logging(self):
@@ -265,13 +271,16 @@ class CrazyFlieWrapper(Thread):
             self.data_log = np.append(self.data_log, data_row, axis=0)
 
     def save_log(self):
-        np.savetxt(self.filename + "cf.csv", self.data_log, fmt='%s', delimiter=',')
-        logger.info("Log saved to {}".format(self.filename + "cf.csv"))
+        if self.filename != "":
+            np.savetxt(self.filename + "_cf.csv", self.data_log, fmt='%s', delimiter=',')
+            logger.info("Log saved to {}".format(self.filename + "_cf.csv"))
         self.is_running = False
         self.scf.cf.close_link()
 
     def save_log_noExit(self): 
-        np.savetxt(self.filename + "cf.csv", self.data_log, fmt='%s', delimiter=',')
+        if self.filename != "":
+            np.savetxt(self.filename + "_cf.csv", self.data_log, fmt='%s', delimiter=',')
+            logger.info("Log saved to {}".format(self.filename + "_cf.csv"))
 
     def logging_enabled(self, val):
         if val == 0:

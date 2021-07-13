@@ -35,8 +35,8 @@ class MainCommunication(Thread):
 
         # Parameters
         self.filename               = filename 
-        self.log_config_vicon       = log_config_vicon
-        self.log_config_crazyflie   = log_config_crazyflie
+        self.log_config_vicon       = [] if 'None' in log_config_vicon else log_config_vicon
+        self.log_config_crazyflie   = [] if 'None' in log_config_crazyflie else log_config_crazyflie
         self.algorithm              = algorithm
         self.uri                    = uri
         self.log_period_crazyflie   = log_period_crazyflie
@@ -44,6 +44,8 @@ class MainCommunication(Thread):
 
         self.zero_time              = datetime.now()
         self.flight_script          = None
+
+        print(self.log_config_crazyflie, self.log_config_vicon)
 
         # States
         self.is_running             = False
@@ -60,7 +62,7 @@ class MainCommunication(Thread):
         )
 
         self.vicon = None
-        if self.log_config_vicon is not None:
+        if len(self.log_config_vicon) > 0:
             self.vicon = ViconWrapper(
                 ip="192.168.10.1", 
                 period=self.log_period_vicon, 
@@ -86,9 +88,14 @@ class MainCommunication(Thread):
         
         # Start logging
         self.is_running = True
-        logger.info("Logging starting...")
-        self.cf.logging_enabled(1)
-        if (self.vicon is not None): 
+
+        if self.filename != "":
+            logger.info("Logging starting...")
+            
+        if len(self.log_config_crazyflie):
+            self.cf.logging_enabled(1)
+
+        if len(self.log_config_vicon):
             self.vicon.logging_enabled(1)
 
         # Use flight script
@@ -96,16 +103,16 @@ class MainCommunication(Thread):
             try:
                 # Run flight script
                 self.flight_script(self.cf.mc, self.state)
-
-                # Stop logging and save logs
-                self.cf.logging_enabled(0)
-                self.cf.save_log()
-                if (self.vicon is not None):
-                    self.vicon.logging_enabled(0)
-                    self.vicon.save_log()
-            except Exception:
-                logger.exception("Illegal command")
+            except:
+                logger.exception("Illegal command!")
                 pass
+
+            # Stop logging and save logs
+            self.cf.logging_enabled(0)
+            self.cf.save_log()
+            if (self.vicon is not None):
+                self.vicon.logging_enabled(0)
+                self.vicon.save_log()
 
         # Use manual control
         else:

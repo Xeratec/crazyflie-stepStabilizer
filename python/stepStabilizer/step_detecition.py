@@ -9,7 +9,7 @@ from scipy.stats import linregress
 logger = logging.getLogger(__name__)
 
 class StepDetector():
-    def __init__(self, num_points=8, step_delay = 2, step_agressivity = 40):
+    def __init__(self, num_points=8, step_delay = 1, step_agressivity = 100):
         # Number of datapoints to consider
         self.num_points = num_points
 
