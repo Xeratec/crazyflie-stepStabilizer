@@ -54,7 +54,7 @@
 
 /* --------------- MACROS --------------- */
 
-#define STABILIZER_UPDATE_RATE    100   // ms
+#define USE_SLOPES                     0
 
 #define NUM_TOF_EDGE_DETECT            5   // number of TOF measurements used for edge detection
 #define NUM_ACC_EDGE_DETECT            5   // number of ACC z-axis measurements used for edge detection
@@ -63,7 +63,7 @@
 
 #define STEP_LIMIT                     3  // maximum (cumulative) step height in meters
 
-#define abs( x ) ((x) < 0 ? -(x) : (x))
+#define abs( x )                       ((x) < 0 ? -(x) : (x))
 
 /* ---------- PRIVATE VARIABLES --------- */
 
@@ -72,7 +72,7 @@ typedef enum {
   SLOPE_ACC_Z = 1,
 } slope_t;
 
-
+#if USE_SLOPES
 // TOF Data buffer for linear regression (edge detection)
 buffered_linear_regression_float_t tof_buffer;
 float tof_time_buffer[NUM_TOF_EDGE_DETECT];
@@ -82,6 +82,7 @@ float tof_data_buffer[NUM_TOF_EDGE_DETECT];
 buffered_linear_regression_float_t acc_buffer;
 float acc_time_buffer[NUM_ACC_EDGE_DETECT];
 float acc_data_buffer[NUM_ACC_EDGE_DETECT];
+#endif /* USE_SLOPES */
 
 // Measurements of TOF from laser sensor
 static xQueueHandle tofUnfilteredDataQueue;
@@ -106,9 +107,11 @@ void appMain()
 {
   DEBUG_PRINT("Starting Application\n");
 
+#if USE_SLOPES
   // initialize the buffers
   buffered_linear_regression_init_float( &tof_buffer, tof_time_buffer, tof_data_buffer, NUM_TOF_EDGE_DETECT);
   buffered_linear_regression_init_float( &acc_buffer, acc_time_buffer, acc_data_buffer, NUM_ACC_EDGE_DETECT);
+#endif /* USE_SLOPES */
 
   // initialize the queue
   tofUnfilteredDataQueue = STATIC_MEM_QUEUE_CREATE(tofUnfilteredDataQueue);
@@ -140,6 +143,7 @@ void appMain()
       float tof_new_data = tofData.distance; //m 
       float acc_new_data = logGetFloat(idAcc_z);
 
+#if USE_SLOPES
       buffered_linear_regression_add_new_float_data( &tof_buffer, new_time/1000.f, tof_new_data);
       buffered_linear_regression_add_new_float_data( &acc_buffer, new_time, acc_new_data);
       buffered_linear_regression_result_t tof_reg_res = buffered_linear_regression_calculate_float_fit(&tof_buffer);
@@ -148,7 +152,7 @@ void appMain()
       // store the slopes into an array to use them as log parameters
       slopes[SLOPE_TOF] = tof_reg_res.a; // m/s
       slopes[SLOPE_ACC_Z] = acc_reg_res.a; // g/ms
-
+#endif /* USE_SLOPES */
       // do the magic with the step detection and estimation
       switch(step_detection_approach)
       {
@@ -181,10 +185,12 @@ void appMain()
                       stepStabilizer_estimation.last_valid_v_tof_index);
       } 
 
+      // modify the tof std deviation if the measurement is not to be trusted (set by param)
+      tofData.stdDev *= tof_stdDev_multiplier;
+
       // enqueue another height estimation for the controller
       // Note: Even though it is called TOF data, the value actually encodes the estimated down range
       // of the drone relative to the liftoff point and not the current distance the drone has to the floor
-      tofData.stdDev *= tof_stdDev_multiplier;
       estimatorEnqueueTOF(&tofData);
     }
     else 
@@ -289,6 +295,7 @@ void stepStabilizer_estimation_run(tofMeasurement_t *tofData, float acc_z)
 
   if(sse->step_detected)
   {
+    // update the step height estimation
     sse->step_height_estimation += dt * (sse->vel_z_estimated - sse->dhdt); // s * m/s = m
 
     // apply limits
