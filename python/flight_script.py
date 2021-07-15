@@ -54,6 +54,11 @@ def main():
     parser_log.add_argument("--sv", action="store", nargs="+", type=str, dest="log_config_vicon",
                         default=['None'],
                         help="Vicon log entry to save. \r\ndefault: None")
+    parser_log.add_argument("--exposeViconPos", type=str,
+                        dest="exposeVicon",
+                        default='None',
+                        help="Send vicon object position to drone."
+                        "default: None")
     parser_log.add_argument("--sc", action="store", nargs="+", type=str, dest="log_config_crazyflie",
                         default=["stateEstimate.z", "stateEstimate.vz", "posCtl.targetZ", "acc.z", "range.zrange"],
                         help="Crazyflie log entry to save. \r\n"
@@ -114,6 +119,7 @@ def main():
         algorithm=args.stepStabilizer,
         log_config_vicon=args.log_config_vicon, 
         log_config_crazyflie=args.log_config_crazyflie,
+        exposeVicon=args.exposeVicon,
         uri=args.uri)
     
     if (args.list_controllers):

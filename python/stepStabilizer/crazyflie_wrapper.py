@@ -202,6 +202,8 @@ class CrazyFlieWrapper(Thread):
         self.scf.cf.param.set_value('stepstabilizer.reset', '1')
         self.scf.cf.param.set_value('kalman.resetEstimation', '1')
 
+        self.scf.cf.param.set_value('stepstabilizer.stdDevMult', '100')
+
         # No step detection algorithm
         if (self.algorithm == 0):
             self.scf.cf.param.set_value('stepstabilizer.type', '0')
@@ -265,9 +267,9 @@ class CrazyFlieWrapper(Thread):
         self.is_connected = False
         self.is_running = False
 
-    def send_extpose(self, cf, pos, quat):
-        x = pos[0]
-        y = pos[1]
+    def send_extpose(self, pos, quat):
+        x = -pos[0]
+        y = -pos[1]
         z = pos[2]
         # qw = quat[0]
         # qx = quat[1]

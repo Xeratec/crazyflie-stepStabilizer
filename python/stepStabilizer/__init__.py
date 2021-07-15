@@ -24,9 +24,10 @@ class MainCommunication(Thread):
         log_config_vicon, 
         log_config_crazyflie,
         algorithm = 0,
+        exposeVicon = 'None',
         uri="radio://0/80/2M",  
-        log_period_vicon=50, 
-        log_period_crazyflie=50
+        log_period_vicon=25, 
+        log_period_crazyflie=25
     ):
 
         Thread.__init__(self)
@@ -38,6 +39,7 @@ class MainCommunication(Thread):
         self.log_config_vicon       = [] if 'None' in log_config_vicon else log_config_vicon
         self.log_config_crazyflie   = [] if 'None' in log_config_crazyflie else log_config_crazyflie
         self.algorithm              = algorithm
+        self.exposeVicon            = exposeVicon
         self.uri                    = uri
         self.log_period_crazyflie   = log_period_crazyflie
         self.log_period_vicon       = log_period_vicon
@@ -66,7 +68,9 @@ class MainCommunication(Thread):
                 period=self.log_period_vicon, 
                 subjects=self.log_config_vicon, 
                 time0=self.zero_time, 
-                filename=self.filename
+                exposeVicon = self.exposeVicon,
+                filename=self.filename,
+                sendDataToCF=self.cf.send_extpose
             )
 
     def set_flight_script(self, script):

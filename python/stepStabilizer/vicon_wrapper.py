@@ -23,14 +23,15 @@ except Exception:
 
 
 class ViconWrapper(Thread):
-    def __init__(self, ip, period, subjects, time0, filename):
+    def __init__(self, ip, period, subjects, time0, filename, exposeVicon = 'None', sendDataToCF=None):
         Thread.__init__(self)
         self.name = "ViconWrapper"
         self.ip = ip
         self.period = period
         self.vicon = []
         self.subjects = subjects
-        self.send_data = None
+        self.exposeVicon = None if exposeVicon == 'None' else exposeVicon
+        self.send_data = sendDataToCF
         self.data_log = np.array([])
         self.data_logging_en = False
         self.text = " "
@@ -80,9 +81,9 @@ class ViconWrapper(Thread):
                             self.log(timestamp, name + "_" + "qx", quat[1])
                             self.log(timestamp, name + "_" + "qy", quat[2])
                             self.log(timestamp, name + "_" + "qz", quat[3])
-                        # if (self.send_data):
-                        #     if name == "CFVLAD":
-                        #         self.send_data([pos, quat])
+                        if (self.exposeVicon is not None and self.send_data):
+                            if name == self.exposeVicon:
+                                self.send_data(pos, 0)
 
             time.sleep(self.period / 1000.0)
             
