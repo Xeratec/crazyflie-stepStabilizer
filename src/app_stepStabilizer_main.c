@@ -94,6 +94,7 @@ float slopes[2];
 stepStabilizerAlgorithm_t step_detection_approach = SSALGORITHM_NONE;
 uint8_t step_detection_reset = 0;
 uint8_t step_detection_print_data = 0;
+uint32_t tof_stdDev_multiplier = 1;
 
 // data used for the estimation algorithm
 stepStabilizer_estimation_t stepStabilizer_estimation;
@@ -123,17 +124,16 @@ void appMain()
 
   while(1)
   {
+     // check for reset
+    if ( step_detection_reset )
+    {
+      DEBUG_PRINT("Reset Application State\n");
+      stepStabilizer_estimation_init();
+      step_detection_reset = 0;
+    }
     // wait for a new TOF measurement
     if( xQueueReceive(tofUnfilteredDataQueue, &tofData, M2T(100)) == pdTRUE )
     {
-      // check for reset
-      if ( step_detection_reset )
-      {
-        DEBUG_PRINT("Reset Application State\n");
-        stepStabilizer_estimation_init();
-        step_detection_reset = 0;
-      }
-
       // collect data
       uint32_t new_time = T2M(xTaskGetTickCount()); // ms
       //float tof_new_data = logGetUint(idTOF);
@@ -184,6 +184,7 @@ void appMain()
       // enqueue another height estimation for the controller
       // Note: Even though it is called TOF data, the value actually encodes the estimated down range
       // of the drone relative to the liftoff point and not the current distance the drone has to the floor
+      tofData.stdDev *= tof_stdDev_multiplier;
       estimatorEnqueueTOF(&tofData);
     }
     else 
@@ -346,6 +347,7 @@ PARAM_GROUP_START(stepstabilizer)
 PARAM_ADD(PARAM_UINT8, type, &step_detection_approach)
 PARAM_ADD(PARAM_UINT8, reset, &step_detection_reset)
 PARAM_ADD(PARAM_UINT8, print_data, &step_detection_print_data)
+PARAM_ADD(PARAM_UINT32, stdDevMult, &tof_stdDev_multiplier)
 PARAM_GROUP_STOP(stepstabilizer)
 
 PARAM_GROUP_START(ssep)
