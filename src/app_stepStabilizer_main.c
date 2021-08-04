@@ -50,6 +50,8 @@
 #include "app_stepStabilizer_main.h"
 #include "buffered_linear_regression.h"
 
+#include "machinelearning.h"
+
 #define DEBUG_MODULE "INTERNLOGPARAM"
 
 /* --------------- MACROS --------------- */
@@ -124,6 +126,9 @@ void appMain()
 
   // initialize the estimation algorithm
   stepStabilizer_estimation_init();
+
+  // Test TFMicro
+  machine_learning_test(0);
 
   while(1)
   {

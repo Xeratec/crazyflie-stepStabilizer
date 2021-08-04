@@ -17,7 +17,6 @@ in C++, and then link it to the main loop later.
 #include "eprintf.h"
 #include "console.h"
 #include "machinelearning.h"
-#include "mnistdata.h"
 
 // Our machine learning models we're putting in :)
 #include "tfmicro_models.h"
@@ -126,7 +125,6 @@ extern "C" int machine_learning_test(int n) {
 
 	// Map the model into a usable data structure. This doesn't involve any
 	// copying or parsing, it's a very lightweight operation.
-	// const tflite::Model* model = ::tflite::GetModel(tiny_mnist_model);
 	const tflite::Model* model = ::tflite::GetModel(TFMICRO_MODEL);
 	//consolePrintf("Loaded in model small_mnist_model.\n");
 	//consolePrintf("Model Version: %d\n", model->version());
