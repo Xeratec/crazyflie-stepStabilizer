@@ -4,6 +4,7 @@
 # image in ./cfX.elf and ./cfX.bin
 
 CRAZYFLIE_BASE ?= ./extern/crazyflie-firmware
+TFMICRO_BASE ?= ./extern/tfmicro
 
 # Put your personal build config in tools/make/config.mk and DO NOT COMMIT IT!
 # Make a copy of tools/make/config.mk.example to get you started
@@ -130,6 +131,24 @@ endif
 VPATH += $(CRAZYFLIE_BASE)/src/init $(CRAZYFLIE_BASE)/src/hal/src $(CRAZYFLIE_BASE)/src/modules/src $(CRAZYFLIE_BASE)/src/modules/src/lighthouse $(CRAZYFLIE_BASE)/src/modules/src/kalman_core $(CRAZYFLIE_BASE)/src/utils/src $(CRAZYFLIE_BASE)/src/drivers/bosch/src $(CRAZYFLIE_BASE)/src/drivers/src $(CRAZYFLIE_BASE)/src/platform
 VPATH += $(CRAZYFLIE_BASE)/src/utils/src/kve
 
+######################### TF Micro Compilation ##################
+# Need to compile TF Micro with some limited C++-11 support
+# and standard libraries for math.
+# Add all subdirectories to the include path so we have these headers
+VPATH += $(TFMICRO_BASE)
+VPATH += $(TFMICRO_BASE)/third_party
+VPATH += $(TFMICRO_BASE)/third_party/flatbuffers
+VPATH += $(TFMICRO_BASE)/third_party/gemmlowp
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/core/api
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/c
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/experimental/micro/examples/micro_speech
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/experimental/micro/examples
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/experimental/micro/testing
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/experimental/micro
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/experimental/micro/kernels
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/kernels/internal
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/kernels
+
 # Exclude the Excluded Files
 EXCLUDES = $(CRAZYFLIE_BASE)/src/modules/src/range.c
 
@@ -224,6 +243,49 @@ PROJ_OBJ += multiranger.o
 PROJ_OBJ += lighthouse.o
 PROJ_OBJ += activeMarkerDeck.o
 
+# Adjust this flag to "force run" the file that you created in the
+# src/deck/drivers/src folder. This overrides the default loading
+# sequence for the Crazyflie so you can run your code there. For some
+# examples look at tfmicrodemo.c or tfmicrobenchmark.c and change the
+# following -DDECK_FORCE flag to your file. 
+# CFLAGS += -DDECK_FORCE=tfMicroDemo
+# Put the name of the model you want to put in here!
+CFLAGS += -D TFMICRO_MODEL=NN_SSE_RMS_10_v2
+CXXFLAGS += -D TFMICRO_MODEL=NN_SSE_RMS_10_v2
+
+######################### TF Micro Compilation ##################
+# Need to compile TF Micro with some limited C++-11 support
+# and standard libraries for math. Add all objects needed for compile.
+TF_SRCS := \
+c_api_internal.o \
+debug_log.o \
+micro_error_reporter.o \
+micro_mutable_op_resolver.o \
+simple_tensor_allocator.o \
+debug_log_numbers.o \
+micro_interpreter.o \
+depthwise_conv.o \
+softmax.o \
+all_ops_resolver.o \
+fully_connected.o \
+error_reporter.o \
+flatbuffer_conversions.o \
+op_resolver.o \
+kernel_util.o \
+quantization_util.o \
+model_settings.o \
+audio_provider.o \
+feature_provider.o \
+preprocessor.o \
+no_features_data.o \
+yes_features_data.o \
+tiny_conv_model_data.o \
+recognize_commands.o \
+machinelearning.o \
+tfmicro_models.o
+
+PROJ_OBJ += $(TF_SRCS)
+
 # Uart2 Link for CRTP communication is not compatible with decks using uart2
 ifeq ($(UART2_LINK), 1)
 CFLAGS += -DUART2_LINK_COMM
@@ -250,6 +312,7 @@ CFLAGS += -DSENSORS_FORCE=SensorImplementation_$(SENSORS)
 # Add sensor file to the build if needed
 ifeq (,$(findstring DSENSOR_INCLUDED_$(SENSORS_UPPER),$(CFLAGS)))
 CFLAGS += -DSENSOR_INCLUDED_$(SENSORS_UPPER)
+CXXFLAGS += -DSENSOR_INCLUDED_$(SENSORS_UPPER)
 PROJ_OBJ += sensors_$(SENSORS).o
 endif
 endif
@@ -286,7 +349,8 @@ OBJ = $(FREERTOS_OBJ) $(PORT_OBJ) $(ST_OBJ) $(PROJ_OBJ) $(APP_OBJ) $(CRT0)
 ############### Compilation configuration ################
 AS = $(CROSS_COMPILE)as
 CC = $(CROSS_COMPILE)gcc
-LD = $(CROSS_COMPILE)gcc
+CXX = $(CROSS_COMPILE)g++
+LD = $(CROSS_COMPILE)g++
 SIZE = $(CROSS_COMPILE)size
 OBJCOPY = $(CROSS_COMPILE)objcopy
 GDB = $(CROSS_COMPILE)gdb
@@ -311,17 +375,29 @@ INCLUDES += -I$(LIB)/STM32_USB_OTG_Driver/inc
 INCLUDES += -I$(LIB)/STM32F4xx_StdPeriph_Driver/inc
 INCLUDES += -I$(LIB)/vl53l1 -I$(LIB)/vl53l1/core/inc
 
+# Add tfmicro library
+INCLUDES += -I $(TFMICRO_BASE)/
+INCLUDES += -I $(TFMICRO_BASE)
+INCLUDES += -I $(TFMICRO_BASE)/third_party/flatbuffers
+INCLUDES += -I $(TFMICRO_BASE)/third_party/flatbuffers/include
+INCLUDES += -I $(TFMICRO_BASE)/third_party
+INCLUDES += -I $(TFMICRO_BASE)/third_party/gemmlowp
+
 CFLAGS += -g3
 ifeq ($(DEBUG), 1)
   CFLAGS += -O0 -DDEBUG
+  CXXFLAGS += -O0 -DDEBUG
 
   # Prevent silent errors when converting between types (requires explicit casting)
 #   CFLAGS += -Wconversion
+#   CXXFLAGS += -Wconversion
 else
   CFLAGS += -Os
+  CXXFLAGS += -Os
 
   # Fail on warnings
   CFLAGS += -Werror
+  CXXFLAGS += -Werror
 endif
 
 # Disable warnings for unaligned addresses in packed structs (added in GCC 9)
@@ -331,23 +407,30 @@ ifeq ($(LTO), 1)
   CFLAGS += -flto
 endif
 
+CXXFLAGS += -fpermissive
+
 CFLAGS += -DBOARD_REV_$(REV) -DESTIMATOR_NAME=$(ESTIMATOR)Estimator -DCONTROLLER_NAME=ControllerType$(CONTROLLER) -DPOWER_DISTRIBUTION_TYPE_$(POWER_DISTRIBUTION)
+CXXFLAGS += -DBOARD_REV_$(REV) -DESTIMATOR_NAME=$(ESTIMATOR)Estimator -DCONTROLLER_NAME=ControllerType$(CONTROLLER) -DPOWER_DISTRIBUTION_TYPE_$(POWER_DISTRIBUTION)
 
 CFLAGS += $(PROCESSOR) $(INCLUDES)
-
+CXXFLAGS += $(PROCESSOR) $(INCLUDES)
 
 CFLAGS += -Wall -Wmissing-braces -fno-strict-aliasing $(C_PROFILE) -std=gnu11
 # Compiler flags to generate dependency files:
 CFLAGS += -MD -MP -MF $(BIN)/dep/$(@).d -MQ $(@)
+CXXFLAGS += -MD -MP -MF $(BIN)/dep/$(@).d -MQ $(@)
 #Permits to remove un-used functions and global variables from output file
 CFLAGS += -ffunction-sections -fdata-sections
+CXXFLAGS += -ffunction-sections -fdata-sections
 # Prevent promoting floats to doubles
 CFLAGS += -Wdouble-promotion
-
 
 ASFLAGS = $(PROCESSOR) $(INCLUDES)
 LDFLAGS += --specs=nosys.specs --specs=nano.specs $(PROCESSOR) -Wl,-Map=$(PROG).map,--cref,--gc-sections,--undefined=uxTopUsedPriority
 LDFLAGS += -L$(CRAZYFLIE_BASE)/tools/make/F405/linker
+
+# Necessary for standard library support
+LDFLAGS += -lstdc++
 
 #Flags required by the ST library
 ifeq ($(CLOAD), 1)
@@ -484,7 +567,7 @@ prep:
 check_submodules:
 	@cd $(CRAZYFLIE_BASE); $(PYTHON) tools/make/check-for-submodules.py
 
-include $(CRAZYFLIE_BASE)/tools/make/targets.mk
+include ./targets.mk
 
 #include dependencies
 -include $(DEPS)

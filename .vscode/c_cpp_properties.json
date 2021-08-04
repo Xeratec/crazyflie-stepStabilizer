@@ -7,6 +7,7 @@
                 "${workspaceFolder}/extern/crazyflie-firmware/src/**",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/Core/Include",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/DSP/Include",
+                "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/NN/Include",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/libdw1000/inc",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/FreeRTOS/include",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/FreeRTOS/portable/GCC/ARM_CM4F",
@@ -31,11 +32,17 @@
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/STM32F4xx_StdPeriph_Driver/inc",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1/core/inc",
+                "${workspaceFolder}/extern/tfmicro",
+                "${workspaceFolder}/extern/tfmicro/third_party/flatbuffers",
+                "${workspaceFolder}/extern/tfmicro/third_party/flatbuffers/include",
+                "${workspaceFolder}/extern/tfmicro/third_party",
+                "${workspaceFolder}/extern/tfmicro/third_party/gemmlowp",
                 "/usr/arm-none-eabi/include/**",
                 "/lib/gcc/arm-none-eabi/**"
             ],
             "defines": [
                 "CRAZYFLIE_FW",
+                "TFMICRO_MODEL=NN_SSE_RMS_10_v2",
                 "ARM_MATH_CM4",
                 "__FPU_PRESENT=1",
                 "STM32F4XX",
@@ -63,6 +70,7 @@
             "browse": {
                 "path": [
                     "${workspaceFolder}/extern/crazyflie-firmware/src/**",
+                    "${workspaceFolder}/extern/tfmicro/**",
                     "${workspaceFolder}/src/**",
                     "/usr/arm-none-eabi/include/**",
                     "/lib/gcc/arm-none-eabi/**"
@@ -101,10 +109,16 @@
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/STM32F4xx_StdPeriph_Driver/inc",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1/core/inc",
+                "${workspaceFolder}/extern/tfmicro",
+                "${workspaceFolder}/extern/tfmicro/third_party/flatbuffers",
+                "${workspaceFolder}/extern/tfmicro/third_party/flatbuffers/include",
+                "${workspaceFolder}/extern/tfmicro/third_party",
+                "${workspaceFolder}/extern/tfmicro/third_party/gemmlowp",
                 "/Applications/ARM/arm-none-eabi/include/**"
             ],
             "defines": [
                 "CRAZYFLIE_FW",
+                "TFMICRO_MODEL=NN_SSE_RMS_10_v2",
                 "ARM_MATH_CM4",
                 "__FPU_PRESENT=1",
                 "STM32F4XX",
@@ -132,6 +146,7 @@
             "browse": {
                 "path": [
                     "${workspaceFolder}/extern/crazyflie-firmware/src/**",
+                    "${workspaceFolder}/extern/tfmicro/**",
                     "${workspaceFolder}/src/**",
                     "/Applications/ARM/arm-none-eabi/include/**"
                 ],

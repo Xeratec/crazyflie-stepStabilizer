@@ -76,6 +76,10 @@ It will connect to the Crazyflie with the specified address, put it in bootloade
 
 Note: this method does not work if the Crazyflie does not start, for instance if the current flashed binary is corrupt. You will have to fall back to manually entering bootloader mode.
 
+## TF Lite
+
+The tensorflow lite implementation is based on https://github.com/harvard-edge/crazyflie-firmware
+
 
 ## Authors
 **Philip Wiese** (ETHZ ETIT)  
