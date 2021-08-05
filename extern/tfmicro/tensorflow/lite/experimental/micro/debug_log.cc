@@ -38,4 +38,10 @@ limitations under the License.
 
 #include <cstdio>
 
-extern "C" void DebugLog(const char* s) { fprintf(stderr, "%s", s); }
+extern "C" {
+    #include "debug.h"
+
+    void DebugLog(const char* s) { 
+        DEBUG_PRINT("%s", s);
+    }
+}
