@@ -42,6 +42,8 @@
 #include "estimator.h"
 #include "stabilizer_types.h"
 
+#define DEBUG_MODULE "APP"
+
 #include "debug.h"
 
 #include "log.h"
@@ -52,7 +54,6 @@
 
 #include "machinelearning.h"
 
-#define DEBUG_MODULE "INTERNLOGPARAM"
 
 /* --------------- MACROS --------------- */
 
@@ -99,6 +100,8 @@ uint8_t step_detection_reset = 0;
 uint8_t step_detection_print_data = 0;
 uint32_t tof_stdDev_multiplier = 1;
 
+uint8_t step_detection_test = 0;
+
 // data used for the estimation algorithm
 stepStabilizer_estimation_t stepStabilizer_estimation;
 stepStabilizer_estimation_parameters_t stepStabilizer_estimation_parameters;
@@ -127,9 +130,6 @@ void appMain()
   // initialize the estimation algorithm
   stepStabilizer_estimation_init();
 
-  // Test TFMicro
-  machine_learning_test(0);
-
   while(1)
   {
      // check for reset
@@ -138,6 +138,13 @@ void appMain()
       DEBUG_PRINT("Reset Application State\n");
       stepStabilizer_estimation_init();
       step_detection_reset = 0;
+    }
+
+    if (step_detection_test ) {
+      DEBUG_PRINT("Test Application\n");
+      // Test TFMicro
+      machine_learning_test(0);
+      step_detection_test = 0;
     }
     // wait for a new TOF measurement
     if( xQueueReceive(tofUnfilteredDataQueue, &tofData, M2T(100)) == pdTRUE )
@@ -358,6 +365,7 @@ LOG_GROUP_STOP(sse)
 PARAM_GROUP_START(stepstabilizer)
 PARAM_ADD(PARAM_UINT8, type, &step_detection_approach)
 PARAM_ADD(PARAM_UINT8, reset, &step_detection_reset)
+PARAM_ADD(PARAM_UINT8, test, &step_detection_test)
 PARAM_ADD(PARAM_UINT8, print_data, &step_detection_print_data)
 PARAM_ADD(PARAM_UINT32, stdDevMult, &tof_stdDev_multiplier)
 PARAM_GROUP_STOP(stepstabilizer)

@@ -14,12 +14,19 @@ in C++, and then link it to the main loop later.
 #include "tensorflow/lite/schema/schema_generated.h"
 #include "tensorflow/lite/version.h"
 
-#include "eprintf.h"
-#include "console.h"
 #include "machinelearning.h"
 
 // Our machine learning models we're putting in :)
 #include "tfmicro_models.h"
+
+#define DEBUG_MODULE "ML"
+
+extern "C" {
+	#include "stm32fxxx.h"
+	#include "FreeRTOS.h"
+
+	#include "debug.h"
+}
 
 extern "C" {
 	/**
@@ -119,21 +126,21 @@ extern "C" {
 
 
 extern "C" int machine_learning_test(int n) {
-
 	tflite::MicroErrorReporter micro_error_reporter;
 	tflite::ErrorReporter* error_reporter = &micro_error_reporter;
+
+	DEBUG_PRINT("Test ML Network.\n");
 
 	// Map the model into a usable data structure. This doesn't involve any
 	// copying or parsing, it's a very lightweight operation.
 	const tflite::Model* model = ::tflite::GetModel(TFMICRO_MODEL);
-	//consolePrintf("Loaded in model small_mnist_model.\n");
-	//consolePrintf("Model Version: %d\n", model->version());
-	//consolePrintf("Model Description: %s\n", model->description());
+	DEBUG_PRINT("Loaded in model small_mnist_model.\n");
+	DEBUG_PRINT("Model Version: %d\n", model->version());
+	DEBUG_PRINT("Model Description: %s\n", model->description());
 
 	if (model->version() != TFLITE_SCHEMA_VERSION) {
 		error_reporter->Report(
-				"Modeltiny_mnist_model provided is schema version %d not equal "
-				"to supported version %d.\n",
+				"Schema version %d not equal to supported version %d.\n",
 				model->version(), TFLITE_SCHEMA_VERSION);
 		return 1;
 	}
@@ -144,27 +151,25 @@ extern "C" int machine_learning_test(int n) {
 	// Create an area of memory to use for input, output, and intermediate arrays.
 	// The size of this will depend on the model you're using, and may need to be
 	// determined by experimentation.
-	const int tensor_arena_size = 1024 * 10;
-	// consolePrintf("Trying to allocate tensor arena of size %d bytes\n", tensor_arena_size);
-	return 1;
-	for (int i = 0; i < 100000; i++) {}
-	uint8_t tensor_arena[tensor_arena_size];
+	const int tensor_arena_size = 1024 * 5;
+	DEBUG_PRINT("Allocate tensor arena of %d bytes\n", tensor_arena_size);
+	
+	uint8_t* tensor_arena = (uint8_t *) pvPortMalloc(tensor_arena_size * sizeof(uint8_t));
+
 	tflite::SimpleTensorAllocator tensor_allocator(tensor_arena, tensor_arena_size);
-	consolePrintf("Allocated the tensors.\n");
+	DEBUG_PRINT("Allocated the tensors.\n");
 
 	// Build an interpreter to runtiny_mnist_model the model with.
-	consolePrintf("Attempting to build the interpreter.\n");
+	DEBUG_PRINT("Attempting to build the interpreter.\n");
 	tflite::MicroInterpreter interpreter(model, resolver, &tensor_allocator, error_reporter);
-	consolePrintf("The interpreter has been built.\n");
+	DEBUG_PRINT("The interpreter has been built.\n");
 	
 	TfLiteTensor* model_input = interpreter.input(0);
 	// Get information about the memory area to use for the model's input.
-	consolePrintf("Dims->size: %d\n", model_input->dims->size);
-	consolePrintf("Dims->data[0]: %d\n", model_input->dims->data[0]);
-	consolePrintf("Dims->data[1]: %d\n", model_input->dims->data[1]);
-	printf("Dims->data[2]: %d\n", model_input->dims->data[2]);
-	printf("kTfLiteUInt8 enum value: %d\n", kTfLiteUInt8);
-	printf("model_input->type: %d\n", model_input->type);
+	DEBUG_PRINT("Dims->size: %d\n", model_input->dims->size);
+	DEBUG_PRINT("Dims->data[0]: %d\n", model_input->dims->data[0]);
+	DEBUG_PRINT("Dims->data[1]: %d\n", model_input->dims->data[1]);
+	DEBUG_PRINT("Dims->data[2]: %d\n", model_input->dims->data[2]);
 
 	// Run the model on the spectrogram input and make sure it succeeds.
 	TfLiteStatus invoke_status = interpreter.Invoke();
@@ -176,7 +181,7 @@ extern "C" int machine_learning_test(int n) {
 	// The output from the model is a vector containing the scores for each
 	// kind of prediction, so figure out what the highest scoring category was.
 	TfLiteTensor* output = interpreter.output(0);
-	printf("First byte of output: %d", output->data.uint8[0]);
+	DEBUG_PRINT("First byte of output: %d", output->data.uint8[0]);
 
 	return 0;
 }

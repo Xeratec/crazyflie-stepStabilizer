@@ -81,9 +81,11 @@ ST_OBJ += usbd_ioreq.o usbd_req.o usbd_core.o
 
 PROCESSOR = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -fno-math-errno -DARM_MATH_CM4 -D__FPU_PRESENT=1 -mfp16-format=ieee
+CXXFLAGS += -fno-math-errno -DARM_MATH_CM4 -D__FPU_PRESENT=1 -mfp16-format=ieee
 
 #Flags required by the ST library
 CFLAGS += -DSTM32F4XX -DSTM32F40_41xxx -DHSE_VALUE=8000000 -DUSE_STDPERIPH_DRIVER
+CXXFLAGS += -DSTM32F4XX -DSTM32F40_41xxx -DHSE_VALUE=8000000 -DUSE_STDPERIPH_DRIVER
 
 LOAD_ADDRESS_stm32f4 = 0x8000000
 LOAD_ADDRESS_CLOAD_stm32f4 = 0x8004000
