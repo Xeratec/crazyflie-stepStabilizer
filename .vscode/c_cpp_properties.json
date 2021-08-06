@@ -32,11 +32,11 @@
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/STM32F4xx_StdPeriph_Driver/inc",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1/core/inc",
-                "${workspaceFolder}/extern/tfmicro",
-                "${workspaceFolder}/extern/tfmicro/third_party/flatbuffers",
-                "${workspaceFolder}/extern/tfmicro/third_party/flatbuffers/include",
-                "${workspaceFolder}/extern/tfmicro/third_party",
-                "${workspaceFolder}/extern/tfmicro/third_party/gemmlowp",
+                "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make",
+                "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make/third_party/flatbuffers",
+                "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make/third_party/flatbuffers/include",
+                "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make/third_party",
+                "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make/third_party/gemmlowp",
                 "/usr/arm-none-eabi/include/**",
                 "/lib/gcc/arm-none-eabi/**"
             ],
@@ -50,6 +50,11 @@
                 "HSE_VALUE=8000000",
                 "USE_STDPERIPH_DRIVER",
                 "DEBUG",
+                "ARM_MATH_DSP",
+                "CMSIS_NN",
+                "TF_LITE_USE_GLOBAL_CMATH_FUNCTIONS",
+                "TF_LITE_USE_GLOBAL_MAX",
+                "TF_LITE_USE_GLOBAL_MIN",
                 "APP=1"
             ],
             "cStandard": "gnu11",
@@ -70,7 +75,7 @@
             "browse": {
                 "path": [
                     "${workspaceFolder}/extern/crazyflie-firmware/src/**",
-                    "${workspaceFolder}/extern/tfmicro/**",
+                    "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make/**",
                     "${workspaceFolder}/src/**",
                     "/usr/arm-none-eabi/include/**",
                     "/lib/gcc/arm-none-eabi/**"
@@ -109,11 +114,11 @@
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/STM32F4xx_StdPeriph_Driver/inc",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/lib/vl53l1/core/inc",
-                "${workspaceFolder}/extern/tfmicro",
-                "${workspaceFolder}/extern/tfmicro/third_party/flatbuffers",
-                "${workspaceFolder}/extern/tfmicro/third_party/flatbuffers/include",
-                "${workspaceFolder}/extern/tfmicro/third_party",
-                "${workspaceFolder}/extern/tfmicro/third_party/gemmlowp",
+                "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make",
+                "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make/third_party/flatbuffers",
+                "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make/third_party/flatbuffers/include",
+                "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make/third_party",
+                "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make/third_party/gemmlowp",
                 "/Applications/ARM/arm-none-eabi/include/**"
             ],
             "defines": [
@@ -126,6 +131,11 @@
                 "HSE_VALUE=8000000",
                 "USE_STDPERIPH_DRIVER",
                 "DEBUG",
+                "ARM_MATH_DSP",
+                "CMSIS_NN",
+                "TF_LITE_USE_GLOBAL_CMATH_FUNCTIONS",
+                "TF_LITE_USE_GLOBAL_MAX",
+                "TF_LITE_USE_GLOBAL_MIN",
                 "APP=1"
             ],
             "cStandard": "gnu11",
@@ -146,7 +156,7 @@
             "browse": {
                 "path": [
                     "${workspaceFolder}/extern/crazyflie-firmware/src/**",
-                    "${workspaceFolder}/extern/tfmicro/**",
+                    "${workspaceFolder}/extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make/**",
                     "${workspaceFolder}/src/**",
                     "/Applications/ARM/arm-none-eabi/include/**"
                 ],

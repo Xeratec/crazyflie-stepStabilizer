@@ -4,6 +4,8 @@ VPATH += ./src
 ############### Source files configuration ################
 PROJ_OBJ += app_stepStabilizer_main.o
 PROJ_OBJ += buffered_linear_regression.o
+PROJ_OBJ += machinelearning.o
+PROJ_OBJ += tfmicro_models.o
 
 ############### Compilation configuration ################
 INCLUDES += -I./src/inc
@@ -15,7 +17,7 @@ INCLUDES += -I./inc
 # Set to ‘1’ to enable the app entry-point
 APP = 1
 # Set the task stack size in 32bit word (4 Bytes). The default is 300 (1.2KBytes)
-APP_STACKSIZE = 10*1024
+APP_STACKSIZE = 3*1024
 
 # Set the task priority between 0 and 5. Default is 0 (same as IDLE).
 APP_PRIORITY = 3

@@ -4,7 +4,9 @@
 # image in ./cfX.elf and ./cfX.bin
 
 CRAZYFLIE_BASE ?= ./extern/crazyflie-firmware
-TFMICRO_BASE ?= ./extern/tfmicro
+TFMICRO_BASE ?= ./extern/tflite-micro/tensorflow/lite/micro/tools/make/gen/stm32f4_cortex-m4+fp_default/prj/hello_world/make
+CMSIS_BASE ?= ./extern/tflite-micro/tensorflow/lite/micro/tools/make/downloads/cmsis
+# CMSIS_BASE ?= $(CRAZYFLIE_BASE)/vendor/CMSIS
 
 # Put your personal build config in tools/make/config.mk and DO NOT COMMIT IT!
 # Make a copy of tools/make/config.mk.example to get you started
@@ -80,6 +82,9 @@ ST_OBJ += usb_core.o usb_dcd_int.o usb_dcd.o
 ST_OBJ += usbd_ioreq.o usbd_req.o usbd_core.o
 
 PROCESSOR = -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16
+CFLAGS += -DARM_MATH_DSP -DCMSIS_NN -DTF_LITE_USE_GLOBAL_CMATH_FUNCTIONS -DTF_LITE_USE_GLOBAL_MAX -DTF_LITE_USE_GLOBAL_MIN
+CXXFLAGS += -DARM_MATH_DSP -DCMSIS_NN -DTF_LITE_USE_GLOBAL_CMATH_FUNCTIONS -DTF_LITE_USE_GLOBAL_MAX -DTF_LITE_USE_GLOBAL_MIN
+
 CFLAGS += -fno-math-errno -DARM_MATH_CM4 -D__FPU_PRESENT=1 -mfp16-format=ieee
 CXXFLAGS += -fno-math-errno -DARM_MATH_CM4 -D__FPU_PRESENT=1 -mfp16-format=ieee
 
@@ -141,20 +146,32 @@ VPATH += $(TFMICRO_BASE)
 VPATH += $(TFMICRO_BASE)/third_party
 VPATH += $(TFMICRO_BASE)/third_party/flatbuffers
 VPATH += $(TFMICRO_BASE)/third_party/gemmlowp
-VPATH += $(TFMICRO_BASE)/tensorflow/lite/core/api
-VPATH += $(TFMICRO_BASE)/tensorflow/lite/c
-VPATH += $(TFMICRO_BASE)/tensorflow/lite/experimental/micro/examples/micro_speech
-VPATH += $(TFMICRO_BASE)/tensorflow/lite/experimental/micro/examples
-VPATH += $(TFMICRO_BASE)/tensorflow/lite/experimental/micro/testing
-VPATH += $(TFMICRO_BASE)/tensorflow/lite/experimental/micro
-VPATH += $(TFMICRO_BASE)/tensorflow/lite/experimental/micro/kernels
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/micro/memory_planner
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/micro/kernels/cmsis_nn
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/micro/kernels
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/micro
 VPATH += $(TFMICRO_BASE)/tensorflow/lite/kernels/internal
 VPATH += $(TFMICRO_BASE)/tensorflow/lite/kernels
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/core/api
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/schema
+VPATH += $(TFMICRO_BASE)/tensorflow/lite/c
+
+VPATH += $(CMSIS_BASE)/CMSIS/NN/Source/ActivationFunctions
+VPATH += $(CMSIS_BASE)/CMSIS/NN/Source/BasicMathFunctions
+VPATH += $(CMSIS_BASE)/CMSIS/NN/Source/ConcatenationFunctions
+VPATH += $(CMSIS_BASE)/CMSIS/NN/Source/ConvolutionFunctions
+VPATH += $(CMSIS_BASE)/CMSIS/NN/Source/FullyConnectedFunctions
+VPATH += $(CMSIS_BASE)/CMSIS/NN/Source/NNSupportFunctions
+VPATH += $(CMSIS_BASE)/CMSIS/NN/Source/PoolingFunctions
+VPATH += $(CMSIS_BASE)/CMSIS/NN/Source/ReshapeFunctions
+VPATH += $(CMSIS_BASE)/CMSIS/NN/Source/SoftmaxFunctions
+VPATH += $(CMSIS_BASE)/CMSIS/NN/Source/SVDFunctions
 
 # Exclude the Excluded Files
-EXCLUDES = $(CRAZYFLIE_BASE)/src/modules/src/range.c
+EXCLUDES_VPATH += $(CRAZYFLIE_BASE)/src/modules/src/range.c
+EXCLUDES_VPATH += $(TFMICRO_BASE)/tensorflow/lite/kernels/kernel_util.cc
 
-VPATH := $(filter-out $(EXCLUDES), $(VPATH))
+VPATH := $(filter-out $(EXCLUDES_VPATH), $(VPATH))
 
 ############### Source files configuration ################
 
@@ -259,34 +276,185 @@ CXXFLAGS += -D TFMICRO_MODEL=NN_SSE_RMS_10_v2
 # Need to compile TF Micro with some limited C++-11 support
 # and standard libraries for math. Add all objects needed for compile.
 TF_SRCS := \
-c_api_internal.o \
-debug_log.o \
-micro_error_reporter.o \
-micro_mutable_op_resolver.o \
-simple_tensor_allocator.o \
-debug_log_numbers.o \
-micro_interpreter.o \
-depthwise_conv.o \
-softmax.o \
-all_ops_resolver.o \
-fully_connected.o \
-error_reporter.o \
-flatbuffer_conversions.o \
-op_resolver.o \
-kernel_util.o \
-quantization_util.o \
-model_settings.o \
-audio_provider.o \
-feature_provider.o \
-preprocessor.o \
-no_features_data.o \
-yes_features_data.o \
-tiny_conv_model_data.o \
-recognize_commands.o \
-machinelearning.o \
-tfmicro_models.o
+debug_log.cc \
+tensorflow/lite/micro/all_ops_resolver.cc \
+tensorflow/lite/micro/flatbuffer_utils.cc \
+tensorflow/lite/micro/memory_helpers.cc \
+tensorflow/lite/micro/micro_allocator.cc \
+tensorflow/lite/micro/micro_error_reporter.cc \
+tensorflow/lite/micro/micro_graph.cc \
+tensorflow/lite/micro/micro_interpreter.cc \
+tensorflow/lite/micro/micro_profiler.cc \
+tensorflow/lite/micro/micro_string.cc \
+tensorflow/lite/micro/micro_time.cc \
+tensorflow/lite/micro/micro_utils.cc \
+tensorflow/lite/micro/mock_micro_graph.cc \
+tensorflow/lite/micro/recording_micro_allocator.cc \
+tensorflow/lite/micro/recording_simple_memory_allocator.cc \
+tensorflow/lite/micro/simple_memory_allocator.cc \
+tensorflow/lite/micro/system_setup.cc \
+tensorflow/lite/micro/test_helpers.cc \
+tensorflow/lite/micro/memory_planner/greedy_memory_planner.cc \
+tensorflow/lite/micro/memory_planner/linear_memory_planner.cc \
+tensorflow/lite/kernels/kernel_util.cc \
+tensorflow/lite/kernels/internal/quantization_util.cc \
+tensorflow/lite/core/api/flatbuffer_conversions.cc \
+tensorflow/lite/core/api/tensor_utils.cc \
+tensorflow/lite/core/api/error_reporter.cc \
+tensorflow/lite/core/api/op_resolver.cc \
+tensorflow/lite/schema/schema_utils.cc \
+tensorflow/lite/c/common.c   \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ActivationFunctions/arm_nn_activations_q15.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ActivationFunctions/arm_nn_activations_q7.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ActivationFunctions/arm_relu6_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ActivationFunctions/arm_relu_q15.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ActivationFunctions/arm_relu_q7.c             \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/BasicMathFunctions/arm_elementwise_add_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/BasicMathFunctions/arm_elementwise_mul_s8.c         \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConcatenationFunctions/arm_concatenation_s8_w.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConcatenationFunctions/arm_concatenation_s8_x.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConcatenationFunctions/arm_concatenation_s8_y.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConcatenationFunctions/arm_concatenation_s8_z.c           \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_1x1_HWC_q7_fast_nonsquare.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_1x1_s8_fast.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_1_x_n_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_HWC_q15_basic.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_HWC_q15_fast.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_HWC_q15_fast_nonsquare.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_HWC_q7_basic.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_HWC_q7_basic_nonsquare.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_HWC_q7_fast.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_HWC_q7_fast_nonsquare.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_HWC_q7_RGB.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_convolve_wrapper_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_depthwise_conv_3x3_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_depthwise_conv_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_depthwise_conv_s8_opt.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_depthwise_conv_u8_basic_ver1.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_depthwise_conv_wrapper_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_depthwise_separable_conv_HWC_q7.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_depthwise_separable_conv_HWC_q7_nonsquare.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_nn_depthwise_conv_s8_core.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_nn_mat_mult_kernel_q7_q15.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_nn_mat_mult_kernel_q7_q15_reordered.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_nn_mat_mult_kernel_s8_s16.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_nn_mat_mult_kernel_s8_s16_reordered.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ConvolutionFunctions/arm_nn_mat_mult_s8.c                                                       \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/FullyConnectedFunctions/arm_fully_connected_mat_q7_vec_q15.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/FullyConnectedFunctions/arm_fully_connected_mat_q7_vec_q15_opt.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/FullyConnectedFunctions/arm_fully_connected_q15.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/FullyConnectedFunctions/arm_fully_connected_q15_opt.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/FullyConnectedFunctions/arm_fully_connected_q7.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/FullyConnectedFunctions/arm_fully_connected_q7_opt.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/FullyConnectedFunctions/arm_fully_connected_s8.c                 \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nn_accumulate_q7_to_q15.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nn_add_q7.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nn_depthwise_conv_nt_t_padded_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nn_depthwise_conv_nt_t_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nn_mat_mul_core_1x_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nn_mat_mul_core_4x_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nn_mat_mult_nt_t_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nn_mult_q15.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nn_mult_q7.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nntables.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nn_vec_mat_mult_t_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_nn_vec_mat_mult_t_svdf_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_q7_to_q15_no_shift.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_q7_to_q15_reordered_no_shift.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_q7_to_q15_reordered_with_offset.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/NNSupportFunctions/arm_q7_to_q15_with_offset.c                                   \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/PoolingFunctions/arm_avgpool_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/PoolingFunctions/arm_max_pool_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/PoolingFunctions/arm_pool_q7_HWC.c         \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/ReshapeFunctions/arm_reshape_s8.c     \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/SoftmaxFunctions/arm_softmax_q15.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/SoftmaxFunctions/arm_softmax_q7.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/SoftmaxFunctions/arm_softmax_s8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/SoftmaxFunctions/arm_softmax_u8.c \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/SoftmaxFunctions/arm_softmax_with_batch_q7.c             \
+tensorflow/lite/micro/tools/make/downloads/cmsis/CMSIS/NN/Source/SVDFunctions/arm_svdf_s8.c     \
+tensorflow/lite/micro/kernels/activations.cc \
+tensorflow/lite/micro/kernels/activations_common.cc \
+tensorflow/lite/micro/kernels/cmsis_nn/add.cc \
+tensorflow/lite/micro/kernels/add_n.cc \
+tensorflow/lite/micro/kernels/arg_min_max.cc \
+tensorflow/lite/micro/kernels/batch_to_space_nd.cc \
+tensorflow/lite/micro/kernels/cast.cc \
+tensorflow/lite/micro/kernels/ceil.cc \
+tensorflow/lite/micro/kernels/circular_buffer.cc \
+tensorflow/lite/micro/kernels/comparisons.cc \
+tensorflow/lite/micro/kernels/concatenation.cc \
+tensorflow/lite/micro/kernels/cmsis_nn/conv.cc \
+tensorflow/lite/micro/kernels/conv_common.cc \
+tensorflow/lite/micro/kernels/cumsum.cc \
+tensorflow/lite/micro/kernels/depth_to_space.cc \
+tensorflow/lite/micro/kernels/cmsis_nn/depthwise_conv.cc \
+tensorflow/lite/micro/kernels/depthwise_conv_common.cc \
+tensorflow/lite/micro/kernels/dequantize.cc \
+tensorflow/lite/micro/kernels/detection_postprocess.cc \
+tensorflow/lite/micro/kernels/elementwise.cc \
+tensorflow/lite/micro/kernels/elu.cc \
+tensorflow/lite/micro/kernels/ethosu.cc \
+tensorflow/lite/micro/kernels/exp.cc \
+tensorflow/lite/micro/kernels/expand_dims.cc \
+tensorflow/lite/micro/kernels/fill.cc \
+tensorflow/lite/micro/kernels/floor.cc \
+tensorflow/lite/micro/kernels/floor_div.cc \
+tensorflow/lite/micro/kernels/floor_mod.cc \
+tensorflow/lite/micro/kernels/cmsis_nn/fully_connected.cc \
+tensorflow/lite/micro/kernels/fully_connected_common.cc \
+tensorflow/lite/micro/kernels/gather.cc \
+tensorflow/lite/micro/kernels/gather_nd.cc \
+tensorflow/lite/micro/kernels/hard_swish.cc \
+tensorflow/lite/micro/kernels/hard_swish_common.cc \
+tensorflow/lite/micro/kernels/if.cc \
+tensorflow/lite/micro/kernels/kernel_runner.cc \
+tensorflow/lite/micro/kernels/kernel_util.cc \
+tensorflow/lite/micro/kernels/l2norm.cc \
+tensorflow/lite/micro/kernels/l2_pool_2d.cc \
+tensorflow/lite/micro/kernels/leaky_relu.cc \
+tensorflow/lite/micro/kernels/logical.cc \
+tensorflow/lite/micro/kernels/logical_common.cc \
+tensorflow/lite/micro/kernels/logistic.cc \
+tensorflow/lite/micro/kernels/logistic_common.cc \
+tensorflow/lite/micro/kernels/log_softmax.cc \
+tensorflow/lite/micro/kernels/maximum_minimum.cc \
+tensorflow/lite/micro/kernels/cmsis_nn/mul.cc \
+tensorflow/lite/micro/kernels/neg.cc \
+tensorflow/lite/micro/kernels/pack.cc \
+tensorflow/lite/micro/kernels/pad.cc \
+tensorflow/lite/micro/kernels/cmsis_nn/pooling.cc \
+tensorflow/lite/micro/kernels/pooling_common.cc \
+tensorflow/lite/micro/kernels/prelu.cc \
+tensorflow/lite/micro/kernels/quantize.cc \
+tensorflow/lite/micro/kernels/quantize_common.cc \
+tensorflow/lite/micro/kernels/reduce.cc \
+tensorflow/lite/micro/kernels/reshape.cc \
+tensorflow/lite/micro/kernels/resize_bilinear.cc \
+tensorflow/lite/micro/kernels/resize_nearest_neighbor.cc \
+tensorflow/lite/micro/kernels/round.cc \
+tensorflow/lite/micro/kernels/shape.cc \
+tensorflow/lite/micro/kernels/cmsis_nn/softmax.cc \
+tensorflow/lite/micro/kernels/softmax_common.cc \
+tensorflow/lite/micro/kernels/space_to_batch_nd.cc \
+tensorflow/lite/micro/kernels/space_to_depth.cc \
+tensorflow/lite/micro/kernels/split.cc \
+tensorflow/lite/micro/kernels/split_v.cc \
+tensorflow/lite/micro/kernels/squeeze.cc \
+tensorflow/lite/micro/kernels/strided_slice.cc \
+tensorflow/lite/micro/kernels/sub.cc \
+tensorflow/lite/micro/kernels/cmsis_nn/svdf.cc \
+tensorflow/lite/micro/kernels/svdf_common.cc \
+tensorflow/lite/micro/kernels/tanh.cc \
+tensorflow/lite/micro/kernels/transpose.cc \
+tensorflow/lite/micro/kernels/transpose_conv.cc \
+tensorflow/lite/micro/kernels/unpack.cc \
+tensorflow/lite/micro/kernels/zeros_like.cc \
 
-PROJ_OBJ += $(TF_SRCS)
+# TF_SRCS := $(notdir $(TF_SRCS))
+
+PROJ_OBJ += $(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(TF_SRCS)))
 
 # Uart2 Link for CRTP communication is not compatible with decks using uart2
 ifeq ($(UART2_LINK), 1)
@@ -348,6 +516,11 @@ PROJ_OBJ += libarm_math.a
 
 OBJ = $(FREERTOS_OBJ) $(PORT_OBJ) $(ST_OBJ) $(PROJ_OBJ) $(APP_OBJ) $(CRT0)
 
+#Get just the paths so you can create them in advance
+OBJDIRS := $(dir $(OBJ))
+OBJDIRS := $(patsubst %,bin/%,$(OBJDIRS))
+DUMMY:=$(shell mkdir --parents $(OBJDIRS))
+
 ############### Compilation configuration ################
 AS = $(CROSS_COMPILE)as
 CC = $(CROSS_COMPILE)gcc
@@ -357,7 +530,11 @@ SIZE = $(CROSS_COMPILE)size
 OBJCOPY = $(CROSS_COMPILE)objcopy
 GDB = $(CROSS_COMPILE)gdb
 
-INCLUDES += -I$(CRAZYFLIE_BASE)/vendor/CMSIS/CMSIS/Core/Include -I$(CRAZYFLIE_BASE)/vendor/CMSIS/CMSIS/DSP/Include
+INCLUDES += -I$(CMSIS_BASE)
+INCLUDES += -I$(CMSIS_BASE)/CMSIS/Core/Include 
+INCLUDES += -I$(CMSIS_BASE)/CMSIS/DSP/Include
+INCLUDES += -I$(CMSIS_BASE)/CMSIS/NN/Include
+
 INCLUDES += -I$(CRAZYFLIE_BASE)/vendor/libdw1000/inc
 INCLUDES += -I$(FREERTOS)/include -I$(PORT)
 
@@ -384,11 +561,12 @@ INCLUDES += -I $(TFMICRO_BASE)/third_party/flatbuffers
 INCLUDES += -I $(TFMICRO_BASE)/third_party/flatbuffers/include
 INCLUDES += -I $(TFMICRO_BASE)/third_party
 INCLUDES += -I $(TFMICRO_BASE)/third_party/gemmlowp
+INCLUDES += -I $(TFMICRO_BASE)/third_party/ruy
 
 CFLAGS += -g3
 ifeq ($(DEBUG), 1)
-  CFLAGS += -O0 -DDEBUG
-  CXXFLAGS += -O0 -DDEBUG
+  CFLAGS += -Os -DDEBUG
+  CXXFLAGS += -Os -DDEBUG
 
   # Prevent silent errors when converting between types (requires explicit casting)
 #   CFLAGS += -Wconversion
@@ -419,8 +597,9 @@ CXXFLAGS += $(PROCESSOR) $(INCLUDES)
 
 CFLAGS += -Wall -Wmissing-braces -fno-strict-aliasing $(C_PROFILE) -std=gnu11
 # Compiler flags to generate dependency files:
-CFLAGS += -MD -MP -MF $(BIN)/dep/$(@).d -MQ $(@)
-CXXFLAGS += -MD -MP -MF $(BIN)/dep/$(@).d -MQ $(@)
+CFLAGS += -MD -MP -MF $(BIN)/dep/$(notdir $(@)).d -MQ $(@)
+CXXFLAGS += -MD -MP -MF $(BIN)/dep/$(notdir $(@)).d -MQ $(@)
+
 #Permits to remove un-used functions and global variables from output file
 CFLAGS += -ffunction-sections -fdata-sections
 CXXFLAGS += -ffunction-sections -fdata-sections

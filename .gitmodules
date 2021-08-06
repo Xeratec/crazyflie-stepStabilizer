@@ -1,3 +1,6 @@
 [submodule "extern/crazyflie-firmware"]
 	path = extern/crazyflie-firmware
 	url = git@github.com:bitcraze/crazyflie-firmware.git
+[submodule "extern/tflite-micro"]
+	path = extern/tflite-micro
+	url = git@github.com:tensorflow/tflite-micro.git
