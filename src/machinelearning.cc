@@ -181,7 +181,15 @@ extern "C" int machine_learning_test(int n) {
 	model_input = interpreter->input(0);
 	// Get information about the memory area to use for the model's input.
 	DEBUG_PRINT("Type: %d\n", model_input->type);
+
+	TfLiteAffineQuantization* model_input_quant = (TfLiteAffineQuantization*) model_input->quantization.params;
 	DEBUG_PRINT("Quantization: %d\n", model_input->quantization.type);
+	if (model_input->quantization.type) {
+		DEBUG_PRINT("Quantization->dim: %d\n", model_input_quant->quantized_dimension);
+		DEBUG_PRINT("Quantization->scale[0]: %f\n", model_input_quant->scale[0]);
+		DEBUG_PRINT("Quantization->zero_point[0]: %d\n", model_input_quant->zero_point[0]);
+	}
+
 	DEBUG_PRINT("Dims->size: %d\n", model_input->dims->size);
 	DEBUG_PRINT("Dims->data[0]: %d\n", model_input->dims->data[0]);
 	DEBUG_PRINT("Dims->data[1]: %d\n", model_input->dims->data[1]);
@@ -196,15 +204,22 @@ extern "C" int machine_learning_test(int n) {
 		return 1;
 	}
 
-	// The output from the model is a vector containing the scores for each
-	// kind of prediction, so figure out what the highest scoring category was.
-	
+
 	model_output = interpreter->output(0);
 	DEBUG_PRINT("Type: %d\n", model_output->type);
+
+ 	TfLiteAffineQuantization* model_output_quant = (TfLiteAffineQuantization*) model_output->quantization.params;
 	DEBUG_PRINT("Quantization: %d\n", model_output->quantization.type);
+	if (model_output->quantization.type) {
+		DEBUG_PRINT("Quantization->dim: %d\n", model_output_quant->quantized_dimension);
+		DEBUG_PRINT("Quantization->scale[0]: %f\n", model_output_quant->scale[0]);
+		DEBUG_PRINT("Quantization->zero_point[0]: %d\n", model_output_quant->zero_point[0]);
+	}
+
 	DEBUG_PRINT("Dims->size: %d\n", model_output->dims->size);
 	DEBUG_PRINT("Dims->out[0]: %d\n", model_output->dims->data[0]);
-	DEBUG_PRINT("First byte of output: %d\n", model_output->data.int8[0]);
+	DEBUG_PRINT("Dims->out[1]: %d\n", model_output->dims->data[1]);
+	DEBUG_PRINT("First byte of output: %f\n", model_output->data.f[0]);
 
 	return 0;
 }
