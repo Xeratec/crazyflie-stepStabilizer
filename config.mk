@@ -23,7 +23,7 @@ APP_STACKSIZE = 3*1024
 APP_PRIORITY = 3
 
 # Crazyflie 2 Platform
-PLATFORM=CF2
+PLATFORM=cf2
 
 # DEBUG=1 allows to get more information from the Crazyflie console when
 # it starts. Debug should not be enabled if you intend to fly the

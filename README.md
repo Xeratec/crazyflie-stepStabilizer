@@ -17,7 +17,7 @@ git clone git@github.com:Xeratec/crazyflie-stepStabilizer.git
 cd crazyflie-stepStabilizer
 ```
 
-Install dependencies, download latest telemetry frame definitions and generate the dynamic parser:
+Install dependencies:
 
 ```bash
 $> chmod +x init.sh
