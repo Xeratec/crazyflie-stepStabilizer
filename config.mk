@@ -6,6 +6,7 @@ PROJ_OBJ += app_stepStabilizer_main.o
 PROJ_OBJ += buffered_linear_regression.o
 PROJ_OBJ += machinelearning.o
 PROJ_OBJ += tfmicro_models.o
+PROJ_OBJ += cycle_counter.o
 
 ############### Compilation configuration ################
 INCLUDES += -I./src/inc

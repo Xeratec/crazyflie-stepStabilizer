@@ -6,6 +6,7 @@ Cortex M4, we still have to link it to the main loop in the firmware.
 Approach will be to expose the common functions we need in C, compile TF Micro
 in C++, and then link it to the main loop later.
 ==============================================================================*/
+#include "stdlib.h"
 
 #include "tensorflow/lite/micro/all_ops_resolver.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
@@ -20,21 +21,26 @@ in C++, and then link it to the main loop later.
 
 #define DEBUG_MODULE "ML"
 
+// C Includes
 extern "C" {
 	#include "stm32fxxx.h"
 	#include "FreeRTOS.h"
+	#include "FreeRTOSConfig.h"
+	#include "task.h"
 
 	#include "debug.h"
-
-	tflite::ErrorReporter* error_reporter = nullptr;
-	const tflite::Model* model = nullptr;
-	tflite::MicroInterpreter* interpreter = nullptr;
-	TfLiteTensor* model_input = nullptr;
-	TfLiteTensor* model_output = nullptr;
-
-	const int kTensorArenaSize = 1024 * 5;
-	uint8_t tensor_arena[kTensorArenaSize];
+	#include "cycle_counter.h"
 }
+
+// Global variables
+tflite::ErrorReporter* error_reporter = nullptr;
+const tflite::Model* model = nullptr;
+tflite::MicroInterpreter* interpreter = nullptr;
+TfLiteTensor* model_input = nullptr;
+TfLiteTensor* model_output = nullptr;
+
+const int kTensorArenaSize = 1024 * 5;
+uint8_t tensor_arena[kTensorArenaSize];
 
 extern "C" {
 	/**
@@ -42,7 +48,8 @@ extern "C" {
 	 */
 	const CTfLiteModel * CTfLiteModel_create() {
 		return reinterpret_cast<const CTfLiteModel*>(
-			::tflite::GetModel(TFMICRO_MODEL));
+			tflite::GetModel(TFMICRO_MODEL)
+		);
 	}
 	void CTfLiteModel_destroy(CTfLiteModel* v) {
 		delete reinterpret_cast<tflite::Model*>(v);
@@ -195,15 +202,36 @@ extern "C" int machine_learning_test(int n) {
 	DEBUG_PRINT("Dims->data[1]: %d\n", model_input->dims->data[1]);
 	DEBUG_PRINT("Dims->data[2]: %d\n", model_input->dims->data[2]);
 
-	// Run the model on the spectrogram input and make sure it succeeds.
-	DEBUG_PRINT("Invoke model...\n");
-	TfLiteStatus invoke_status = interpreter->Invoke();
-	if (invoke_status != kTfLiteOk) {
-		DEBUG_PRINT("Invoke failed");
-		error_reporter->Report("Invoke failed");
-		return 1;
+	for (int i = 0; i < model_input->bytes ;++i) {
+		model_input->data.uint8[i] = (rand() % 20) + 50;
 	}
 
+	// Run the model on the spectrogram input and make sure it succeeds.
+	DEBUG_PRINT("Invoke model...\n");
+
+	for (int test=0; test<100; ++test) {
+		// Reset and start cylce counter
+		ResetTimer();
+		StartTimer();
+
+		// Run inference
+		TfLiteStatus invoke_status = interpreter->Invoke();
+
+		// Stop Timer
+		StopTimer();
+
+		// Check for errors
+		if (invoke_status != kTfLiteOk) {
+			DEBUG_PRINT("Invoke failed");
+			error_reporter->Report("Invoke failed");
+			return 1;
+		} else {
+			unsigned int inference_cycles = getCycles();
+			float inference_time = inference_cycles / (1.0f * configCPU_CLOCK_HZ) * 1000.0f;
+			DEBUG_PRINT("[%03d] %.3f ms (%u CPU cycles).\r\n",test, inference_time, inference_cycles);
+		}
+		vTaskDelay(M2T(25));
+	}
 
 	model_output = interpreter->output(0);
 	DEBUG_PRINT("Type: %d\n", model_output->type);

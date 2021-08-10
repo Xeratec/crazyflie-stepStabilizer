@@ -11,7 +11,6 @@
 extern "C" {
 #endif
 
-int testDoubleFunction(int x);
 int machine_learning_test(int n);
 
 struct CTfLiteModel; // An opaque type that we'll use as a handle
@@ -23,7 +22,6 @@ int CTfLiteModel_version(CTfLiteModel* v);
 
 struct CTfInterpreter; // An opaque type that we'll use as a handle
 typedef struct CTfInterpreter CTfInterpreter;
-int CTfInterpreter_create_return_version(const CTfLiteModel*, int);
 int CTfLiteModel_dimensions(const CTfLiteModel* c_model, uint8_t* arena, size_t size, int dim);
 
 // Actual inference functions
