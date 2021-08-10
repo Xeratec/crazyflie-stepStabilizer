@@ -268,9 +268,11 @@ PROJ_OBJ += activeMarkerDeck.o
 # examples look at tfmicrodemo.c or tfmicrobenchmark.c and change the
 # following -DDECK_FORCE flag to your file. 
 # CFLAGS += -DDECK_FORCE=tfMicroDemo
-# Put the name of the model you want to put in here!
-CFLAGS += -D TFMICRO_MODEL=NN_SSE_RMS_10_v2
-CXXFLAGS += -D TFMICRO_MODEL=NN_SSE_RMS_10_v2
+
+ifdef ML_MODEL
+CFLAGS += -D TFMICRO_MODEL=$(ML_MODEL)
+CXXFLAGS += -D TFMICRO_MODEL=$(ML_MODEL)
+endif
 
 ######################### TF Micro Compilation ##################
 # Need to compile TF Micro with some limited C++-11 support

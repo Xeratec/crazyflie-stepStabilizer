@@ -49,11 +49,10 @@
 #include "log.h"
 #include "param.h"
 
+// User files
 #include "app_stepStabilizer_main.h"
 #include "buffered_linear_regression.h"
-
 #include "machinelearning.h"
-
 
 /* --------------- MACROS --------------- */
 
@@ -105,6 +104,8 @@ uint8_t step_detection_test = 0;
 // data used for the estimation algorithm
 stepStabilizer_estimation_t stepStabilizer_estimation;
 stepStabilizer_estimation_parameters_t stepStabilizer_estimation_parameters;
+const CTfLiteModel* tfl_model;
+CTfLiteInterpreter* tfl_interpreter;
 
 /* ------------- FUNCTIONS -------------- */
 
@@ -124,11 +125,14 @@ void appMain()
 
   //logVarId_t idTOF = logGetVarId("range", "zrange");
   logVarId_t idAcc_z = logGetVarId("acc", "z");
+  logVarId_t idPosCtrl_z = logGetVarId("posCtl", "targetZ");
 
   tofMeasurement_t tofData;
 
   // initialize the estimation algorithm
   stepStabilizer_estimation_init();
+  // initialize the machine learining algorithm
+  stepStabilizer_machine_learning_init();
 
   while(1)
   {
@@ -154,6 +158,7 @@ void appMain()
       //float tof_new_data = logGetUint(idTOF);
       float tof_new_data = tofData.distance; //m 
       float acc_new_data = logGetFloat(idAcc_z);
+      float pos_new_data = logGetFloat(idPosCtrl_z);
 
 #if USE_SLOPES
       buffered_linear_regression_add_new_float_data( &tof_buffer, new_time/1000.f, tof_new_data);
@@ -171,31 +176,33 @@ void appMain()
         case SSALGORITHM_NONE:
           break;
         case SSALGORITHM_MACHINE_LEARNING:
+          stepStabilizer_machine_learning_run(&tofData, acc_new_data, pos_new_data);
           break;
         case SSALGORITHM_ESTIMATION:
           stepStabilizer_estimation_run(&tofData, acc_new_data);
+          if ( step_detection_print_data )
+          {
+            DEBUG_PRINT("%lu,%f,%f,%f,%f,%f,%f,%f,%lu,%f,%lu,%f,%lu,%lu,%lu\n",
+                          new_time,
+                          (double) tof_new_data, 
+                          (double) acc_new_data,
+                          (double) slopes[SLOPE_TOF],
+                          (double) stepStabilizer_estimation.acc_z_dt,
+                          (double) stepStabilizer_estimation.vel_reference,
+                          (double) stepStabilizer_estimation.vel_integrated,
+                          (double) stepStabilizer_estimation.vel_difference,
+                          (uint32_t)(stepStabilizer_estimation.step_detected ? 1 : 0),
+                          (double) stepStabilizer_estimation.step_height_estimation,
+                          stepStabilizer_estimation.after_step_cooldown,
+                          (double) stepStabilizer_estimation.vel_z_estimated,
+                          stepStabilizer_estimation.step_duration,
+                          stepStabilizer_estimation.buffer_idx,
+                          stepStabilizer_estimation.last_valid_v_tof_index);
+          } 
           break;
       }
 
-      if ( step_detection_print_data )
-      {
-        DEBUG_PRINT("%lu,%f,%f,%f,%f,%f,%f,%f,%lu,%f,%lu,%f,%lu,%lu,%lu\n",
-                      new_time,
-                      (double) tof_new_data, 
-                      (double) acc_new_data,
-                      (double) slopes[SLOPE_TOF],
-                      (double) stepStabilizer_estimation.acc_z_dt,
-                      (double) stepStabilizer_estimation.vel_reference,
-                      (double) stepStabilizer_estimation.vel_integrated,
-                      (double) stepStabilizer_estimation.vel_difference,
-                      (uint32_t)(stepStabilizer_estimation.step_detected ? 1 : 0),
-                      (double) stepStabilizer_estimation.step_height_estimation,
-                      stepStabilizer_estimation.after_step_cooldown,
-                      (double) stepStabilizer_estimation.vel_z_estimated,
-                      stepStabilizer_estimation.step_duration,
-                      stepStabilizer_estimation.buffer_idx,
-                      stepStabilizer_estimation.last_valid_v_tof_index);
-      } 
+      
 
       // modify the tof std deviation if the measurement is not to be trusted (set by param)
       tofData.stdDev *= tof_stdDev_multiplier;
@@ -219,6 +226,7 @@ void stepStabilizerEnqueueTOF(tofMeasurement_t *tofData)
 
 void stepStabilizer_estimation_init()
 {
+  DEBUG_PRINT("Init Filter\n");
   if (stepStabilizer_estimation.acc_z_dt_buffer != NULL) free(stepStabilizer_estimation.acc_z_dt_buffer);
   if (stepStabilizer_estimation.v_tof_buffer != NULL) free(stepStabilizer_estimation.v_tof_buffer);
 
@@ -246,6 +254,13 @@ void stepStabilizer_estimation_init()
 
   memset(stepStabilizer_estimation.acc_z_dt_buffer, 0, ESTIMATOR_BUFFER_SIZE * sizeof(float));
   memset(stepStabilizer_estimation.v_tof_buffer, 0, ESTIMATOR_BUFFER_SIZE * sizeof(float));
+}
+
+void stepStabilizer_machine_learning_init()
+{
+  DEBUG_PRINT("Init Neural network\n");
+  tfl_model = CTfLiteModel_create(TFMICRO_MODEL);
+  tfl_interpreter = CTFLiteInterpreter_create(tfl_model);
 }
 
 void stepStabilizer_estimation_run(tofMeasurement_t *tofData, float acc_z)
@@ -323,6 +338,16 @@ void stepStabilizer_estimation_run(tofMeasurement_t *tofData, float acc_z)
 
   // apply limits to the tof data
   if ( tofData->distance < 0) tofData->distance = 0;
+}
+
+void stepStabilizer_machine_learning_run(tofMeasurement_t *tofData, float acc_z, float posCtrl_z)
+{
+  // Run empty inference
+  uint32_t inference_cycles = CTfLiteInterpreter_run(tfl_interpreter, NULL, 0, NULL, 0);
+  if ( step_detection_print_data ) {
+    double inference_time = inference_cycles / (1.0f * configCPU_CLOCK_HZ) * 1000.0f;
+    DEBUG_PRINT("%.3f ms (%lu CPU cycles).\r\n", inference_time, inference_cycles);
+  }
 }
 
 // start inclusive, end exclusive

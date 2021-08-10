@@ -1,11 +1,11 @@
-// Choices of model in tfmicro_models.h
-// Examples are: fc_tflite, micro_conv_tflite, etc
+#include "tfmicro_models.h"
+
 #ifndef TFMICRO_MODEL
-#define TFMICRO_MODEL fc_320_tflite
+#define TFMICRO_MODEL NN_SSE_RMS_10_v2
 #endif
 
 // type of model. uint8_t if quantized, usually float if not.
-#define model_type uint8_t
+#define model_type float
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,18 +15,19 @@ int machine_learning_test(int n);
 
 struct CTfLiteModel; // An opaque type that we'll use as a handle
 typedef struct CTfLiteModel CTfLiteModel;
-const CTfLiteModel* CTfLiteModel_create();
+
+const CTfLiteModel* CTfLiteModel_create(const void *);
 void CTfLiteModel_destroy(CTfLiteModel*);
-int CTfLiteModel_version(CTfLiteModel* v);
+int CTfLiteModel_version(CTfLiteModel*);
 
+struct CTfLiteInterpreter; // An opaque type that we'll use as a handle
+typedef struct CTfLiteInterpreter CTfLiteInterpreter;
 
-struct CTfInterpreter; // An opaque type that we'll use as a handle
-typedef struct CTfInterpreter CTfInterpreter;
-int CTfLiteModel_dimensions(const CTfLiteModel* c_model, uint8_t* arena, size_t size, int dim);
+CTfLiteInterpreter* CTFLiteInterpreter_create(const CTfLiteModel*);
+void CTFLiteInterpreter_destroy(CTfLiteInterpreter*);
 
 // Actual inference functions
-void CTfInterpreter_simple_fc(const CTfLiteModel* c_model, uint8_t* tensor, int alloc_size, uint8_t* input, int* result);
-void CTfInterpreter_simple_conv(const CTfLiteModel*, uint8_t*, size_t, model_type*, size_t, model_type*, size_t);
+int CTfLiteInterpreter_run(CTfLiteInterpreter*, model_type*, size_t, model_type*, size_t);
 
 #ifdef __cplusplus
 }

@@ -14,11 +14,12 @@ INCLUDES += -I./inc
 
 
 ############### Configuration ################
+ML_MODEL = NN_SSE_RMS_10_v2
 
 # Set to ‘1’ to enable the app entry-point
 APP = 1
 # Set the task stack size in 32bit word (4 Bytes). The default is 300 (1.2KBytes)
-APP_STACKSIZE = 3*1024
+APP_STACKSIZE = 1*1024
 
 # Set the task priority between 0 and 5. Default is 0 (same as IDLE).
 APP_PRIORITY = 3

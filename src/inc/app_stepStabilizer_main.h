@@ -47,7 +47,9 @@ typedef struct stepStabilizer_estimation_paramters_s {
 void stepStabilizerEnqueueTOF(tofMeasurement_t *tofData);
 
 void stepStabilizer_estimation_init(void);
+void stepStabilizer_machine_learning_init(void);
 
 void stepStabilizer_estimation_run(tofMeasurement_t *tofData, float acc_z);
+void stepStabilizer_machine_learning_run(tofMeasurement_t *tofData, float acc_z, float posCtrl_z);
 
 float sumbuffer(float* array, uint32_t start_index, uint32_t end_index, uint32_t buffer_length);
