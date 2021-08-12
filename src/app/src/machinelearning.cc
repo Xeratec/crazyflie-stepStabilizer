@@ -134,7 +134,7 @@ extern "C" {
 }
 
 
-extern "C" int machine_learning_test(int n) {
+extern "C" int machine_learning_test() {
 	static const tflite::Model* test_model = nullptr;
 
 	static tflite::ErrorReporter* test_error_reporter = nullptr;

@@ -197,12 +197,11 @@ class CrazyFlieWrapper(Thread):
         self.scf.cf.param.set_value('commander.enHighLevel', '1')
         
         # Reset estimators
-        self.scf.cf.param.set_value('stepstabilizer.print_data', '0')
-
         self.scf.cf.param.set_value('stepstabilizer.reset', '1')
         self.scf.cf.param.set_value('kalman.resetEstimation', '1')
 
-        self.scf.cf.param.set_value('stepstabilizer.stdDevMult', '100')
+        # self.scf.cf.param.set_value('stepstabilizer.print_data', '0')
+        # self.scf.cf.param.set_value('stepstabilizer.stdDevMult', '100')
 
         # No step detection algorithm
         if (self.algorithm == 0):

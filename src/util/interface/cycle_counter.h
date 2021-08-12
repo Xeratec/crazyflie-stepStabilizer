@@ -1,5 +1,5 @@
-#ifndef CYCLECOUNTER
-#define CYCLECOUNTER
+#ifndef __CYCLECOUNTER_H__
+#define __CYCLECOUNTER_H__
 
 static volatile unsigned int *DWT_CYCCNT  ;
 static volatile unsigned int *DWT_CONTROL ;
@@ -17,4 +17,4 @@ void StopTimer(void);
 // Returns the current number of cycles according to the internal cycle counter
 unsigned int getCycles(void);
 
-#endif 
+#endif // __CYCLECOUNTER_H__

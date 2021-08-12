@@ -59,7 +59,7 @@ void rangeEnqueueDownRangeInEstimator(float distance, float stdDev, uint32_t tim
   tofData.stdDev = stdDev;
 
   // enque the TOF measurement in the application queue instead of the estimator queue
-  stepStabilizerEnqueueTOF(&tofData);
+  stepStabilizer_enqueueTOF(&tofData);
 }
 
 /**

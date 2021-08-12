@@ -1,16 +1,7 @@
+#ifndef __STEP_STABILIZER_APP_FILTER_H__
+#define __STEP_STABILIZER_APP_FILTER_H__
 
-#include "FreeRTOS.h"
-#include "queue.h"
-#include "static_mem.h"
-#include "task.h"
-
-#include "stabilizer_types.h"
-
-typedef enum stepStabilizerAlgorithm_e {
-    SSALGORITHM_NONE= 0,
-    SSALGORITHM_ESTIMATION = 1,
-    SSALGORITHM_MACHINE_LEARNING = 2,
-} stepStabilizerAlgorithm_t;
+#include "app_stepStabilizer_main.h"
 
 typedef struct stepStabilizer_estimation_s {
     // values calculated in the latest iteration (only used for log, not state-relevant)
@@ -44,12 +35,9 @@ typedef struct stepStabilizer_estimation_paramters_s {
     uint32_t after_step_cooldown;
 } stepStabilizer_estimation_parameters_t;
 
-void stepStabilizerEnqueueTOF(tofMeasurement_t *tofData);
-
 void stepStabilizer_estimation_init(void);
-void stepStabilizer_machine_learning_init(void);
-
+void stepStabilizer_estimation_reset(void);
+void stepStabilizer_estimation_test(void);
 void stepStabilizer_estimation_run(tofMeasurement_t *tofData, float acc_z);
-void stepStabilizer_machine_learning_run(tofMeasurement_t *tofData, float acc_z, float posCtrl_z);
 
-float sumbuffer(float* array, uint32_t start_index, uint32_t end_index, uint32_t buffer_length);
+#endif //__STEP_STABILIZER_APP_FILTER_H__

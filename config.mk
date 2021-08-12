@@ -1,17 +1,22 @@
 ################ Build configuration ##################
 VPATH += ./src
+VPATH += ./src/app/src
+VPATH += ./src/override
+VPATH += ./src/util/src
 
 ############### Source files configuration ################
 PROJ_OBJ += app_stepStabilizer_main.o
-PROJ_OBJ += buffered_linear_regression.o
-PROJ_OBJ += machinelearning.o
+PROJ_OBJ += app_stepStabilizer_filter.o
+PROJ_OBJ += app_stepStabilizer_ml.o
 PROJ_OBJ += tfmicro_models.o
+PROJ_OBJ += machinelearning.o
+
+PROJ_OBJ += utils.o
 PROJ_OBJ += cycle_counter.o
 
 ############### Compilation configuration ################
-INCLUDES += -I./src/inc
-INCLUDES += -I./inc
-
+INCLUDES += -I./src/app/interface
+INCLUDES += -I./src/util/interface
 
 ############### Configuration ################
 ML_MODEL = NN_SSE_RMS_10_v2

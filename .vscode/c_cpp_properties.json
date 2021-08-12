@@ -3,7 +3,7 @@
         {
             "name": "CF2 Linux",
             "includePath": [
-                "${workspaceFolder}/src/inc/**",
+                "${workspaceFolder}/src/**",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/**",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/Core/Include",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/DSP/Include",
@@ -86,7 +86,7 @@
         {
             "name": "CF2 MacOS",
             "includePath": [
-                "${workspaceFolder}/src/inc/**",
+                "${workspaceFolder}/src/**",
                 "${workspaceFolder}/extern/crazyflie-firmware/src/**",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/Core/Include",
                 "${workspaceFolder}/extern/crazyflie-firmware/vendor/CMSIS/CMSIS/DSP/Include",

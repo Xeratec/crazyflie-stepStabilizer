@@ -1,3 +1,6 @@
+#ifndef __STEP_STABILIZER_ML_H__
+#define __STEP_STABILIZER_ML_H__
+
 #include "tfmicro_models.h"
 
 #ifndef TFMICRO_MODEL
@@ -11,7 +14,7 @@
 extern "C" {
 #endif
 
-int machine_learning_test(int n);
+int machine_learning_test();
 
 struct CTfLiteModel; // An opaque type that we'll use as a handle
 typedef struct CTfLiteModel CTfLiteModel;
@@ -32,3 +35,5 @@ int CTfLiteInterpreter_run(CTfLiteInterpreter*, model_type*, size_t, model_type*
 #ifdef __cplusplus
 }
 #endif
+
+#endif // __STEP_STABILIZER_ML_H__
