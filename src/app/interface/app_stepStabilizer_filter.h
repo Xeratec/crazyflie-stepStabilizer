@@ -3,6 +3,7 @@
 
 #include "app_stepStabilizer_main.h"
 
+
 typedef struct stepStabilizer_estimation_s {
     // values calculated in the latest iteration (only used for log, not state-relevant)
     bool step_detected;
@@ -38,6 +39,6 @@ typedef struct stepStabilizer_estimation_paramters_s {
 void stepStabilizer_estimation_init(void);
 void stepStabilizer_estimation_reset(void);
 void stepStabilizer_estimation_test(void);
-void stepStabilizer_estimation_run(tofMeasurement_t *tofData, float acc_z);
+float stepStabilizer_estimation_run(tofMeasurement_t *tofData, float acc_z);
 
 #endif //__STEP_STABILIZER_APP_FILTER_H__

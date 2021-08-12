@@ -20,18 +20,17 @@ struct CTfLiteModel; // An opaque type that we'll use as a handle
 typedef struct CTfLiteModel CTfLiteModel;
 
 const CTfLiteModel* CTfLiteModel_create(const void *);
-void CTfLiteModel_destroy(CTfLiteModel*);
-int CTfLiteModel_version(CTfLiteModel*);
+void CTfLiteModel_destroy(CTfLiteModel* c_model);
+int CTfLiteModel_version(CTfLiteModel* c_model);
 
 struct CTfLiteInterpreter; // An opaque type that we'll use as a handle
 typedef struct CTfLiteInterpreter CTfLiteInterpreter;
 
-CTfLiteInterpreter* CTFLiteInterpreter_create(const CTfLiteModel*);
-void CTFLiteInterpreter_destroy(CTfLiteInterpreter*);
+CTfLiteInterpreter* CTFLiteInterpreter_create(const CTfLiteModel* c_model);
+void CTFLiteInterpreter_destroy(CTfLiteInterpreter* c_interpreter);
 
 // Actual inference functions
-int CTfLiteInterpreter_run(CTfLiteInterpreter*, model_type*, size_t, model_type*, size_t);
-
+int CTfLiteInterpreter_run(CTfLiteInterpreter* c_interpreter, model_type* input, size_t input_size, model_type* result, size_t result_size);
 #ifdef __cplusplus
 }
 #endif

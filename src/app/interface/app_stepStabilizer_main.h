@@ -14,6 +14,8 @@
 // User files
 #include "utils.h"
 
+#define STEP_LIMIT                     1.5f  // maximum (cumulative) step height in meters
+
 typedef enum stepStabilizerAlgorithm_e {
     SSALGORITHM_NONE= 0,
     SSALGORITHM_ESTIMATION = 1,

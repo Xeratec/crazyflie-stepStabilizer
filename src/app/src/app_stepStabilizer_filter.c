@@ -30,8 +30,6 @@
 
 #define ESTIMATOR_BUFFER_SIZE         20
 
-#define STEP_LIMIT                     3  // maximum (cumulative) step height in meters
-
 /* ---------- PRIVATE VARIABLES --------- */
 
 // data used for the estimation algorithm
@@ -79,10 +77,10 @@ void stepStabilizer_estimation_test() {
     return;
 }
 
-void stepStabilizer_estimation_run(tofMeasurement_t *tofData, float acc_z)
+float stepStabilizer_estimation_run(tofMeasurement_t *tofData, float acc_z)
 {
   // make sure we are initialized
-  if ( acc_z == 0.f) return;
+  if ( acc_z == 0.f) return 0;
 
   // make the code easier to read
   stepStabilizer_estimation_t* sse = &stepStabilizer_estimation;
@@ -149,11 +147,7 @@ void stepStabilizer_estimation_run(tofMeasurement_t *tofData, float acc_z)
   // store the last "raw" tof data
   sse->prev_tof = *tofData;
 
-  // modify the TOF data
-  tofData->distance += sse->step_height_estimation;
-
-  // apply limits to the tof data
-  if ( tofData->distance < 0) tofData->distance = 0;
+  return sse->step_height_estimation;
 }
 
 LOG_GROUP_START(sse)

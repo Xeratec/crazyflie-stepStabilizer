@@ -39,6 +39,8 @@
 #include "app_stepStabilizer_ml.h"
 
 /* --------------- MACROS --------------- */
+#define FREQUENCY_ML                   25
+#define FREQUENCY_ESTIMATION           0
 
 /* ---------- PRIVATE VARIABLES --------- */
 
@@ -54,6 +56,10 @@ stepStabilizerConfig_t stepStabilizer_config =
   .print_data = 0,
   .tof_stdDev_multiplier = 1,
 };
+
+float step_height_estimation = 0;
+
+TickType_t last_estimation_inference;
 
 /* ------------- FUNCTIONS -------------- */
 
@@ -78,54 +84,58 @@ void appMain()
   DEBUG_PRINT("Init Neural Network Algorithm\n");
   stepStabilizer_machine_learning_init();
 
+  last_estimation_inference = xTaskGetTickCount();
+
   while(1)
   {
      // check for reset
-    if ( stepStabilizer_config.reset )
-    {
+    if ( stepStabilizer_config.reset ) {
       DEBUG_PRINT("Reset Application State\n");
-      // stepStabilizer_estimation_init();
+      stepStabilizer_estimation_reset();
+      stepStabilizer_machine_learning_reset();
       stepStabilizer_config.reset = 0;
     }
 
     if (stepStabilizer_config.test ) {
       DEBUG_PRINT("Test Application\n");
       // Test TFMicro
+      stepStabilizer_estimation_test();
       stepStabilizer_machine_learning_test();
       stepStabilizer_config.test = 0;
     }
-    // wait for a new TOF measurement
-    if( xQueueReceive(tofUnfilteredDataQueue, &tofData, M2T(100)) == pdTRUE )
+
+    // Wait for a new TOF measurement
+    if( xQueueReceive(tofUnfilteredDataQueue, &tofData, M2T(5)) == pdTRUE )
     {
-      // collect data
-      float acc_new_data = logGetFloat(idAcc_z);
-      float pos_new_data = logGetFloat(idPosCtrl_z);
-
-      // do the magic with the step detection and estimation
-      switch(stepStabilizer_config.type)
-      {
-        case SSALGORITHM_NONE:
-          break;
-        case SSALGORITHM_MACHINE_LEARNING:
-          stepStabilizer_machine_learning_run(&tofData, acc_new_data, pos_new_data);
-          break;
-        case SSALGORITHM_ESTIMATION:
-          stepStabilizer_estimation_run(&tofData, acc_new_data);
-          break;
+      if ( 
+        (stepStabilizer_config.type == SSALGORITHM_ESTIMATION) && 
+        (xTaskGetTickCount() - last_estimation_inference > FREQUENCY_ESTIMATION) 
+      ) { 
+        step_height_estimation = stepStabilizer_estimation_run(&tofData, logGetFloat(idAcc_z));
+      } else if ( 
+        (stepStabilizer_config.type == SSALGORITHM_MACHINE_LEARNING) && 
+        (xTaskGetTickCount() - last_estimation_inference > FREQUENCY_ML) 
+      ) {
+        last_estimation_inference = xTaskGetTickCount();
+        step_height_estimation = stepStabilizer_machine_learning_run(&tofData, logGetFloat(idAcc_z), logGetFloat(idPosCtrl_z));
+      } else {
+        step_height_estimation = 0;
       }
-
-      // modify the tof std deviation if the measurement is not to be trusted (set by param)
+   
+      // Modify the tof std deviation if the measurement is not to be trusted (set by param)
       tofData.stdDev *= stepStabilizer_config.tof_stdDev_multiplier;
+
+      // Modify the TOF data
+      tofData.distance += step_height_estimation;
+
+      // apply limits to the tof data
+      if ( tofData.distance < 0) tofData.distance = 0;
 
       // enqueue another height estimation for the controller
       // Note: Even though it is called TOF data, the value actually encodes the estimated down range
       // of the drone relative to the liftoff point and not the current distance the drone has to the floor
       estimatorEnqueueTOF(&tofData);
-    }
-    else 
-    { 
-      DEBUG_PRINT("TOF Timeout!\n");
-    }
+    }   
   }
 }
 
