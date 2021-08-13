@@ -1,6 +1,6 @@
 # Part of CrazyFlie's Makefile
 # Copyright (c) 2009, Arnaud Taffanel
-# Common targets with verbose support
+# Common targets with verbose support, added C++ support
 
 
 ifeq ($(V),)

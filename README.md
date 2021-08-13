@@ -78,8 +78,9 @@ Note: this method does not work if the Crazyflie does not start, for instance if
 
 ## TF Lite
 
-The tensorflow lite implementation is based on https://github.com/harvard-edge/crazyflie-firmware
+Because all of the firmware for the crazyflie is written in C, and TF-Micro is in C++, we need to compile TF Micro with some limited C++-11 support and standard libraries for math. 
 
+Therefore, the TF Micro is compiled in C++ with some important functions exposed in C and then later linked with the crazyflie firmware.
 
 ## Authors
 **Philip Wiese** (ETHZ ETIT)  
@@ -87,3 +88,6 @@ The tensorflow lite implementation is based on https://github.com/harvard-edge/c
 
 **Luca Rufer** (ETHZ ETIT)  
   *[lrufer@student.ethz.ch](mailto:lrufer@student.ethz.ch)* - [LucaRufer](https://github.com/LucaRufer) 
+
+## License
+This software is released under Apache 2.0, see the LICENSE file in the root of this repository for details.
