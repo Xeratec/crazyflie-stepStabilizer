@@ -20,8 +20,14 @@ cd crazyflie-stepStabilizer
 Install dependencies:
 
 ```bash
-$> chmod +x init.sh
-$> ./init.sh
+$> chmod +x configure
+$> ./configure
+```
+
+Clean and build project:
+```bash
+$> make clean
+$> make
 ```
 
 ## Make targets
