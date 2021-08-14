@@ -50,11 +50,14 @@ extern "C" {
 	#include "task.h"
 
 	#include "debug.h"
+	#include "utils.h"
 	#include "cycle_counter.h"
 }
 
 // Global variables
-const int kTensorArenaSize = 1024 * 5;
+
+// Determined with test_interpreter->arena_used_bytes(); and added some safety margin
+const int kTensorArenaSize = BUFFER_ALIGNED_16BYTE_SIZE(1276+512); 
 uint8_t tensor_arena[kTensorArenaSize];
 
 extern "C" {
@@ -111,6 +114,9 @@ extern "C" {
 			DEBUG_PRINT("AllocateTensors() failed");
 			return nullptr;
 		}
+
+		size_t arena_used_bytes = interpreter->arena_used_bytes();
+		DEBUG_PRINT("Used arena bytes: %lu\n", arena_used_bytes);
 		
 		return reinterpret_cast<CTfLiteInterpreter*>(interpreter);
 	}
@@ -205,6 +211,9 @@ extern "C" int machine_learning_test() {
 		DEBUG_PRINT("AllocateTensors() failed");
 		return -1;
 	}
+
+	size_t arena_used_bytes = test_interpreter->arena_used_bytes();
+	DEBUG_PRINT("Used arena bytes: %lu\n", arena_used_bytes);
 	
 	test_model_input = test_interpreter->input(0);
 	// Get information about the memory area to use for the model's input.

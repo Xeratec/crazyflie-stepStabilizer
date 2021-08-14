@@ -219,9 +219,7 @@ class CrazyFlieWrapper(Thread):
         # Set PID Controller
         self.scf.cf.param.set_value('commander.enHighLevel', '1')
         
-        # Reset estimators
-        self.scf.cf.param.set_value('stepstabilizer.reset', '1')
-        self.scf.cf.param.set_value('kalman.resetEstimation', '1')
+        
 
         # self.scf.cf.param.set_value('stepstabilizer.print_data', '0')
         # self.scf.cf.param.set_value('stepstabilizer.stdDevMult', '100')
@@ -244,6 +242,9 @@ class CrazyFlieWrapper(Thread):
         if (self.algorithm == 3):
             self.scf.cf.param.set_value('stepstabilizer.type', '2')
 
+        # Reset estimators
+        self.scf.cf.param.set_value('stepstabilizer.reset', '1')
+        self.scf.cf.param.set_value('kalman.resetEstimation', '1')
         logger.info("CF configured!")
 
     def _stab_log_data(self, timestamp_cf, data, logconf):

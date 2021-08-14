@@ -27,6 +27,9 @@
 
 #define abs( x )                       ((x) < 0 ? -(x) : (x))
 
+/*! Memory-Align buffer length to architecture */
+#define BUFFER_ALIGNED_16BYTE_SIZE( x )  ( ( (x)/16+1)*16 )
+
 /* -------- FUNCTION PROTOTYPES --------- */
 
 float sumbuffer(float* array, uint32_t start_index, uint32_t end_index, uint32_t buffer_length);
