@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:                                              # <-- must use actions/checkout@v1 before mirroring!
     - uses: actions/checkout@v1
-    - uses: pixta-dev/repository-mirroring-action@v1
+    - uses: n0bra1n3r/repository-mirroring-action@v2
       with:
         target_repo_url:
           git@iis-git.ee.ethz.ch:wiesep/crazyflie-stepStabilizer.git
