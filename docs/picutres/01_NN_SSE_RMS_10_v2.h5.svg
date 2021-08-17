@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.4.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="export" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 663.5 92" style="enable-background:new 0 0 663.5 92;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:none;}
+	.st1{fill:none;stroke:#333333;}
+	.st2{fill:#335588;}
+	.st3{fill:#FFFFFF;}
+	.st4{font-family:'ArialMT';}
+	.st5{font-size:11px;}
+	.st6{font-size:9px;}
+	.st7{fill:#4B1B16;}
+	.st8{fill:#6C4F47;}
+	.st9{fill:#EEEEEE;stroke:#333333;}
+	.st10{enable-background:new    ;}
+	.st11{fill:#EEEEEE;}
+</style>
+<g id="edge-paths">
+	<path class="st0" d=""/>
+	<path class="st0" d=""/>
+	<path d="M112,43.5l6,3l-6,3l2.4-3L112,43.5z"/>
+	<path id="edge-conv1d_input" d="M117.4,46.5"/>
+	<path class="st0" d=""/>
+	<path d="M267,43.5l6,3l-6,3l2.4-3L267,43.5z"/>
+	<path id="edge-conv1d" d="M272.4,46.5"/>
+	<path class="st0" d=""/>
+	<path d="M387,43.5l6,3l-6,3l2.4-3L387,43.5z"/>
+	<path id="edge-conv1d_1" d="M392.4,46.5"/>
+	<path class="st0" d=""/>
+	<path d="M454.1,43.5l6,3l-6,3l2.4-3L454.1,43.5z"/>
+	<path id="edge-flatten" d="M459.5,46.5"/>
+	<path class="st0" d=""/>
+	<path d="M574.1,43.5l6,3l-6,3l2.4-3L574.1,43.5z"/>
+	<path id="edge-dense" d="M579.5,46.5"/>
+	<line class="st1" x1="89" y1="46.5" x2="579.5" y2="46.5"/>
+</g>
+<g id="nodes">
+	<g id="node-name-conv1d" transform="translate(247.1015625,61)">
+		<g transform="translate(-67.5078125,-61)">
+			<g transform="translate(0,0)">
+				<path class="st2" d="M-57.2,0.5h125c2.8,0,5,2.2,5,5v18l0,0h-135l0,0v-18C-62.2,2.7-60,0.5-57.2,0.5z"/>
+				<text transform="matrix(1 0 0 1 -56.2131 16.5)" class="st3 st4 st5">Conv1D</text>
+			</g>
+			<g transform="translate(0,23)">
+				<path class="st3" d="M-62.2,0.5h135l0,0v46.6l0,0h-135l0,0V0.5L-62.2,0.5z"/>
+				<text transform="matrix(1 0 0 1 -56.2131 14.5)" class="st4 st6">batch_input_shape</text>
+				<text transform="matrix(1 0 0 1 19.8519 14.5)" class="st4 st6"> = null, 10, 3</text>
+				<text transform="matrix(1 0 0 1 -56.2131 28.5)" class="st4 st6">filters</text>
+				<text transform="matrix(1 0 0 1 -34.7106 28.5)" class="st4 st6"> = 1</text>
+				<text transform="matrix(1 0 0 1 -56.2131 40.5)" class="st4 st6">kernel_size</text>
+				<text transform="matrix(1 0 0 1 -10.6901 40.5)" class="st4 st6"> = 4</text>
+				<line class="st1" x1="-62.2" y1="0.5" x2="72.8" y2="0.5"/>
+			</g>
+			<g transform="translate(0,99)">
+				<path class="st7" d="M-62.2-30.5h135l0,0v18c0,2.8-2.2,5-5,5h-125c-2.8,0-5-2.2-5-5V-30.5L-62.2-30.5z"/>
+				<text transform="matrix(1 0 0 1 -56.2131 -14.5)" class="st3 st4 st5">ReLU</text>
+			</g>
+			<line class="st1" x1="-62.2" y1="68.5" x2="72.8" y2="68.5"/>
+			<path class="st1" d="M-57.2,0.5h125c2.8,0,5,1.7,5,3.7v83.5c0,2.1-2.2,3.7-5,3.7h-125c-2.8,0-5-1.7-5-3.7V4.2
+				C-62.2,2.2-60,0.5-57.2,0.5z"/>
+		</g>
+	</g>
+	<g id="node-name-conv1d_1" transform="translate(384.609375,61)">
+		<g transform="translate(-50,-54)">
+			<g transform="translate(0,0)">
+				<path class="st2" d="M-57.2,3.5h90c2.8,0,5,2.2,5,5v18l0,0h-100l0,0v-18C-62.2,5.7-60,3.5-57.2,3.5z"/>
+				<text transform="matrix(1 0 0 1 -56.2131 19.5)" class="st3 st4 st5">Conv1D</text>
+			</g>
+			<g transform="translate(0,23)">
+				<path class="st3" d="M-62.2,3.5h100l0,0v27.6l0,0h-100l0,0V3.5L-62.2,3.5z"/>
+				<text transform="matrix(1 0 0 1 -56.2131 15.5)" class="st4 st6">filters</text>
+				<text transform="matrix(1 0 0 1 -34.7106 15.5)" class="st4 st6"> = 5</text>
+				<text transform="matrix(1 0 0 1 -56.2131 26.5)" class="st4 st6">kernel_size</text>
+				<text transform="matrix(1 0 0 1 -10.6901 26.5)" class="st4 st6"> = 3</text>
+				<line class="st1" x1="-62.2" y1="3.5" x2="37.8" y2="3.5"/>
+			</g>
+			<g transform="translate(0,85)">
+				<path class="st7" d="M-62.2-31.5h100l0,0v18c0,2.8-2.2,5-5,5h-90c-2.8,0-5-2.2-5-5V-31.5L-62.2-31.5z"/>
+				<text transform="matrix(1 0 0 1 -56.2131 -15.5)" class="st3 st4 st5">ReLU</text>
+			</g>
+			<line class="st1" x1="-62.2" y1="53.5" x2="37.8" y2="53.5"/>
+			<path class="st1" d="M-57.2,3.5h90c2.8,0,5,1.5,5,3.4v66.2c0,1.9-2.2,3.4-5,3.4h-90c-2.8,0-5-1.5-5-3.4V6.9
+				C-62.2,5-60,3.5-57.2,3.5z"/>
+		</g>
+	</g>
+	<g id="node-name-flatten" transform="translate(478.1484375,61)">
+		<g transform="translate(-23.5390625,-11.5)">
+			<g transform="translate(0,0)">
+				<path class="st8" d="M-57.2-14.5h37.1c2.8,0,5,2.2,5,5v13c0,2.8-2.2,5-5,5h-37.1c-2.8,0-5-2.2-5-5v-13
+					C-62.2-12.3-60-14.5-57.2-14.5z"/>
+				<text transform="matrix(1 0 0 1 -56.2131 1.5)" class="st3 st4 st5">Flatten</text>
+			</g>
+			<path class="st1" d="M-57.2-14.5h37.1c2.8,0,5,2.2,5,5v13c0,2.8-2.2,5-5,5h-37.1c-2.8,0-5-2.2-5-5v-13
+				C-62.2-12.3-60-14.5-57.2-14.5z"/>
+		</g>
+	</g>
+	<g id="node-name-dense" transform="translate(571.6875,61)">
+		<g transform="translate(-50,-40)">
+			<g transform="translate(0,0)">
+				<path class="st2" d="M-57.2,2.5h90c2.8,0,5,2.2,5,5v18l0,0h-100l0,0v-18C-62.2,4.7-60,2.5-57.2,2.5z"/>
+				<text transform="matrix(1 0 0 1 -56.2131 18.5)" class="st3 st4 st5">Dense</text>
+			</g>
+			<g transform="translate(0,57)">
+				<path class="st7" d="M-62.2-31.5h100l0,0v18c0,2.8-2.2,5-5,5h-90c-2.8,0-5-2.2-5-5V-31.5L-62.2-31.5z"/>
+				<text transform="matrix(1 0 0 1 -56.2131 -15.5)" class="st3 st4 st5">TanH</text>
+			</g>
+			<line class="st1" x1="-62.2" y1="25.5" x2="37.8" y2="25.5"/>
+			<path class="st1" d="M-57.2,2.5h90c2.8,0,5,1.3,5,2.9v40.2c0,1.6-2.2,2.9-5,2.9h-90c-2.8,0-5-1.3-5-2.9V5.4
+				C-62.2,3.8-60,2.5-57.2,2.5z"/>
+		</g>
+	</g>
+	<g id="input-name-input" transform="translate(19.796875,61)">
+		<g transform="translate(-19.796875,-11.5)">
+			<path class="st9" d="M11.7-31.5h66.2C84-31.5,89-25.7,89-18.6V15c0,7.1-5,12.9-11.2,12.9H11.7C5.5,27.9,0.5,22.1,0.5,15v-33.6
+				C0.5-25.7,5.5-31.5,11.7-31.5z"/>
+			<g transform="translate(0,0)">
+				<text transform="matrix(1 0 0 1 9.9338 -12.0664)" class="st10"><tspan x="0" y="0" class="st4 st5">Acc. Z data</tspan><tspan x="0" y="13.2" class="st4 st5">ToF data</tspan><tspan x="0" y="26.4" class="st4 st5">Height setpoint</tspan></text>
+			</g>
+		</g>
+	</g>
+	<g transform="translate(663.25,61)">
+		<g transform="translate(-21.5625,-11.5)">
+			<g transform="translate(0,0)">
+				<path class="st11" d="M-52.5-14.5h64.1c5.3,0,9.7,2.2,9.7,5v13c0,2.8-4.3,5-9.7,5h-64.1c-5.3,0-9.7-2.2-9.7-5v-13
+					C-62.2-12.3-57.9-14.5-52.5-14.5z"/>
+				<text transform="matrix(1 0 0 1 -56.2131 1.5)" class="st4 st5">Height Change</text>
+			</g>
+			<path class="st1" d="M-52.5-14.5h64.1c5.3,0,9.7,2.2,9.7,5v13c0,2.8-4.3,5-9.7,5h-64.1c-5.3,0-9.7-2.2-9.7-5v-13
+				C-62.2-12.3-57.9-14.5-52.5-14.5z"/>
+		</g>
+	</g>
+</g>
+</svg>
